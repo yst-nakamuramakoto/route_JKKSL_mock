@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<title>営業支援ルートアプリ モック</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Hiragino Sans", "Segoe UI", sans-serif;
+    background: #f2f4f7;
+    color: #222;
+  }
+  header {
+    background: #1a3c63;
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 18px;
+    font-weight: bold;
+  }
+  nav {
+    display: flex;
+    background: #fff;
+    border-bottom: 1px solid #ddd;
+    position: sticky;
+    top: 0;
+  }
+  nav button {
+    flex: 1;
+    padding: 12px 4px;
+    border: none;
+    background: none;
+    font-size: 13px;
+    cursor: pointer;
+    color: #555;
+    border-bottom: 3px solid transparent;
+  }
+  nav button.active {
+    color: #1a3c63;
+    font-weight: bold;
+    border-bottom: 3px solid #1a3c63;
+  }
+  main {
+    max-width: 480px;
+    margin: 0 auto;
+    padding: 16px;
+  }
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 14px;
+    margin-bottom: 12px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .card h3 { margin: 0 0 6px; font-size: 15px; }
+  .meta { font-size: 12px; color: #777; margin-bottom: 8px; }
+  .tag {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-right: 6px;
+  }
+  .tag.high { background: #ffe3e3; color: #c0392b; }
+  .tag.mid  { background: #fff4d6; color: #b8860b; }
+  .tag.low  { background: #e3f0ff; color: #2563ad; }
+  .actions { display: flex; gap: 8px; margin-top: 10px; }
+  .btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .btn.accept { background: #1a3c63; color: #fff; }
+  .btn.reject { background: #eee; color: #555; }
+
+  .section-title {
+    font-size: 13px;
+    color: #888;
+    margin: 18px 0 8px;
+    font-weight: bold;
+  }
+
+  /* 機能2 ルート */
+  .map-placeholder {
+    background: linear-gradient(135deg,#cfe3f5,#e8f1fa);
+    height: 220px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #5a7fa3;
+    font-size: 13px;
+    margin-bottom: 12px;
+    position: relative;
+    overflow: hidden;
+  }
+  .map-placeholder::after {
+    content: "📍 → 📍 → 📍 → 🏁";
+    font-size: 20px;
+    position: absolute;
+  }
+  .route-summary {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: #444;
+    margin-bottom: 12px;
+  }
+  .route-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .route-num {
+    width: 24px; height: 24px;
+    background: #1a3c63;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .route-detail { flex: 1; }
+  .route-detail .name { font-size: 14px; font-weight: bold; }
+  .route-detail .sub { font-size: 12px; color: #888; }
+
+  /* 機能3 滞在アラート */
+  .visit-card {
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .countdown {
+    font-size: 38px;
+    font-weight: bold;
+    margin: 10px 0;
+  }
+  .countdown.warn { color: #d99000; }
+  .countdown.danger { color: #c0392b; }
+  .status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 14px;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .status-badge.ok { background: #e3f7e8; color: #2e8b50; }
+  .status-badge.warn { background: #fff4d6; color: #b8860b; }
+  .status-badge.danger { background: #ffe3e3; color: #c0392b; }
+  .progress-bar {
+    height: 8px;
+    border-radius: 4px;
+    background: #eee;
+    overflow: hidden;
+    margin: 10px 0;
+  }
+  .progress-bar > div {
+    height: 100%;
+    background: #d99000;
+    width: 78%;
+  }
+
+  /* 機能4 駐車場 */
+  .parking-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .parking-item .name { font-size: 14px; font-weight: bold; }
+  .parking-item .sub { font-size: 12px; color: #888; }
+  .availability {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-weight: bold;
+  }
+  .availability.open { background: #e3f7e8; color: #2e8b50; }
+  .availability.full { background: #f0f0f0; color: #999; }
+</style>
+</head>
+<body>
+
+<header>営業支援ルートアプリ（モック）</header>
+
+<nav>
+  <button class="tab active" data-screen="home">① ホーム<br>空き時間提案</button>
+  <button class="tab" data-screen="route">② ルート提案</button>
+  <button class="tab" data-screen="visit">③ 滞在アラート</button>
+  <button class="tab" data-screen="parking">④ 駐車場</button>
+</nav>
+
+<main>
+
+  <!-- 機能1 -->
+  <section class="screen active" id="home">
+    <div class="section-title">本日の空き時間</div>
+    <div class="card">
+      <h3>13:00 - 15:00（空き 2時間）</h3>
+      <div class="meta">渋谷区周辺</div>
+    </div>
+
+    <div class="section-title">AIからの訪問提案</div>
+
+    <div class="card">
+      <span class="tag high">優先度：高</span><span class="tag low">モニタリング</span>
+      <h3>株式会社サンプル商事</h3>
+      <div class="meta">前回訪問から62日経過 ／ 想定所要時間：45分 ／ 距離：1.2km</div>
+      <div class="actions">
+        <button class="btn accept">カレンダーに追加</button>
+        <button class="btn reject">却下</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <span class="tag mid">優先度：中</span><span class="tag low">新規営業</span>
+      <h3>有限会社みらい工業</h3>
+      <div class="meta">見込み顧客リスト掲載 ／ 想定所要時間：30分 ／ 距離：2.8km</div>
+      <div class="actions">
+        <button class="btn accept">カレンダーに追加</button>
+        <button class="btn reject">却下</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 機能2 -->
+  <section class="screen" id="route">
+    <div class="map-placeholder"></div>
+    <div class="route-summary">
+      <span>総移動距離：12.4km</span>
+      <span>総移動時間：38分</span>
+    </div>
+    <div class="section-title">最適訪問順</div>
+
+    <div class="route-item">
+      <div class="route-num">1</div>
+      <div class="route-detail">
+        <div class="name">株式会社サンプル商事</div>
+        <div class="sub">到着目安 13:15／滞在45分</div>
+      </div>
+    </div>
+    <div class="route-item">
+      <div class="route-num">2</div>
+      <div class="route-detail">
+        <div class="name">有限会社みらい工業</div>
+        <div class="sub">到着目安 14:20／滞在30分</div>
+      </div>
+    </div>
+    <div class="route-item">
+      <div class="route-num">3</div>
+      <div class="route-detail">
+        <div class="name">事業所（帰着）</div>
+        <div class="sub">到着目安 15:10</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 機能3 -->
+  <section class="screen" id="visit">
+    <div class="visit-card">
+      <div class="status-badge warn">訪問中：株式会社サンプル商事</div>
+      <div class="countdown warn">残り 08:42</div>
+      <div class="progress-bar"><div></div></div>
+      <div class="meta">予定終了 14:00（45分の訪問予定）</div>
+    </div>
+
+    <div class="section-title">通知ログ</div>
+    <div class="card">
+      <div class="meta">13:50　まもなく退出予定時間です（残り10分）</div>
+    </div>
+    <div class="card">
+      <div class="meta">13:15　訪問先に到着しました</div>
+    </div>
+  </section>
+
+  <!-- 機能4 -->
+  <section class="screen" id="parking">
+    <div class="section-title">株式会社サンプル商事 周辺の駐車場</div>
+
+    <div class="parking-item">
+      <div>
+        <div class="name">タイムズ渋谷第3</div>
+        <div class="sub">徒歩2分／¥300・20分</div>
+      </div>
+      <div class="availability open">空車 4台</div>
+    </div>
+
+    <div class="parking-item">
+      <div>
+        <div class="name">三井のリパーク渋谷南</div>
+        <div class="sub">徒歩4分／¥400・30分</div>
+      </div>
+      <div class="availability open">空車 1台</div>
+    </div>
+
+    <div class="parking-item">
+      <div>
+        <div class="name">タイムズ渋谷駅前</div>
+        <div class="sub">徒歩1分／¥500・20分</div>
+      </div>
+      <div class="availability full">満車</div>
+    </div>
+
+    <div class="card" style="margin-top:14px;">
+      <button class="btn accept" style="width:100%;">空車駐車場をルートに追加</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+  const tabs = document.querySelectorAll('.tab');
+  const screens = document.querySelectorAll('.screen');
+  tabs.forEach(tab => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('active'));
+      screens.forEach(s => s.classList.remove('active'));
+      tab.classList.add('active');
+      document.getElementById(tab.dataset.screen).classList.add('active');
+    });
+  });
+</script>
+
+</body>
+</html>
