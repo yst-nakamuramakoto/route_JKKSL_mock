@@ -302,60 +302,23 @@
   .fab-wrap.open .fab-main { transform: rotate(45deg); }
 
   /* ===== マスコット（むすぼなグリーン） ===== */
-  .mascot {
-    position: relative;
+  .mascot-img {
     display: inline-block;
-    width: 26px;
-    height: 30px;
+    vertical-align: middle;
+    border-radius: 6px;
     flex-shrink: 0;
   }
-  .mascot .m-body {
-    position: absolute;
-    top: 6px; left: 0;
-    width: 26px; height: 22px;
-    background: #4CAF50;
-    border-radius: 45% 45% 50% 50% / 55% 55% 45% 45%;
-  }
-  .mascot .m-antenna-stick {
-    position: absolute;
-    top: 0; left: 11px;
-    width: 2px; height: 7px;
-    background: #2E7D32;
-  }
-  .mascot .m-antenna-ball {
-    position: absolute;
-    top: -3px; left: 9px;
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #2E7D32;
-  }
-  .mascot .m-visor {
-    position: absolute;
-    top: 15px; left: 4px;
-    width: 18px; height: 7px;
-    background: #fff;
-    border-radius: 3px;
-  }
-  .mascot .m-eye {
-    position: absolute;
-    top: 1px;
-    width: 3px; height: 5px;
-    background: #20231f;
-    border-radius: 1px;
-  }
-  .mascot .m-eye.l { left: 3px; }
-  .mascot .m-eye.r { left: 11px; }
-
-  .mascot.mascot-sm { width: 18px; height: 21px; transform: scale(0.7); transform-origin: top right; }
-  .mascot.mascot-lg { transform: scale(1.7); transform-origin: top center; margin-bottom: 14px; }
+  .mascot-img-sm { width: 22px; height: 22px; }
+  .mascot-img-lg { width: 64px; height: 64px; margin-bottom: 6px; }
 
   .fab-badge-mascot {
     position: absolute;
     top: -10px;
     right: -4px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
   }
   .fab-wrap.open .fab-badge-mascot { display: none; }
-  .fab-option .mascot { margin-right: 2px; vertical-align: middle; }
+  .fab-option .mascot-img { margin-right: 4px; }
   .alert-mascot-row {
     display: flex;
     justify-content: center;
@@ -1106,22 +1069,12 @@
       <button class="fab-option" id="openAddAi">🤖 AI提案を追加</button>
       <button class="fab-option" id="openAddTask">✅ タスクを追加</button>
       <button class="fab-option" id="openAddSchedule">
-        <span class="mascot mascot-sm" aria-hidden="true">
-          <span class="m-antenna-ball"></span>
-          <span class="m-antenna-stick"></span>
-          <span class="m-body"></span>
-          <span class="m-visor"><span class="m-eye l"></span><span class="m-eye r"></span></span>
-        </span>
+        <img src="MuK.jpg" class="mascot-img mascot-img-sm" alt="" aria-hidden="true">
         予定を追加
       </button>
       <button class="fab-main" id="fabMain">
         ＋
-        <span class="mascot mascot-sm fab-badge-mascot" aria-hidden="true">
-          <span class="m-antenna-ball"></span>
-          <span class="m-antenna-stick"></span>
-          <span class="m-body"></span>
-          <span class="m-visor"><span class="m-eye l"></span><span class="m-eye r"></span></span>
-        </span>
+        <img src="MuK.jpg" class="mascot-img mascot-img-sm fab-badge-mascot" alt="" aria-hidden="true">
       </button>
     </div>
 
@@ -1164,12 +1117,7 @@
 <div class="alert-popup-overlay" id="alertPopup">
   <div class="alert-popup-box">
     <div class="alert-mascot-row">
-      <span class="mascot mascot-lg" aria-hidden="true">
-        <span class="m-antenna-ball"></span>
-        <span class="m-antenna-stick"></span>
-        <span class="m-body"></span>
-        <span class="m-visor"><span class="m-eye l"></span><span class="m-eye r"></span></span>
-      </span>
+      <img src="MuK.jpg" class="mascot-img mascot-img-lg" alt="" aria-hidden="true">
     </div>
     <div class="big-icon">⏰</div>
     <h2>退出時間です！</h2>
