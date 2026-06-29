@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>営業支援ルートアプリ モック</title>
+<title>MUSUBOなびゲート routesupport（モック）</title>
 <style>
   * { box-sizing: border-box; }
   html, body {
@@ -38,6 +38,26 @@
     font-weight: bold;
     margin-bottom: 18px;
     padding: 0 6px;
+  }
+  .brand-mascot {
+    width: 38px;
+    height: 38px;
+    border-radius: 9px;
+    margin-bottom: 6px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  .brand-name {
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    line-height: 1.3;
+  }
+  .brand-tagline {
+    font-size: 8px;
+    letter-spacing: 1.2px;
+    color: #d7ead7;
+    text-transform: lowercase;
+    margin-top: 2px;
   }
   .side-item {
     background: none;
@@ -288,18 +308,26 @@
   .fab-wrap.open .fab-option { display: flex; }
   .fab-main {
     position: relative;
-    width: 56px;
-    height: 56px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     background: #8BC34A;
-    color: #2E7D32;
     border: none;
-    font-size: 26px;
+    padding: 0;
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
     cursor: pointer;
     transition: transform 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  .fab-wrap.open .fab-main { transform: rotate(45deg); }
+  .fab-wrap.open .fab-main { transform: scale(1.08); }
+  .fab-main-mascot {
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    object-fit: cover;
+  }
 
   /* ===== マスコット（むすぼなグリーン） ===== */
   .mascot-img {
@@ -311,13 +339,6 @@
   .mascot-img-sm { width: 22px; height: 22px; }
   .mascot-img-lg { width: 64px; height: 64px; margin-bottom: 6px; }
 
-  .fab-badge-mascot {
-    position: absolute;
-    top: -10px;
-    right: -4px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
-  }
-  .fab-wrap.open .fab-badge-mascot { display: none; }
   .fab-option .mascot-img { margin-right: 4px; }
   .alert-mascot-row {
     display: flex;
@@ -675,7 +696,11 @@
 
   <!-- 左サイドメニュー -->
   <div class="sidebar">
-    <div class="brand">営業支援<br>ルート</div>
+    <div class="brand">
+      <img src="MuK.jpg" class="brand-mascot" alt="MUSUBOなびゲート">
+      <div class="brand-name">MUSUBO<br>なびゲート</div>
+      <div class="brand-tagline">routesupport</div>
+    </div>
     <button class="side-item active" data-screen="home"><span class="icon">🏠</span>ホーム</button>
     <button class="side-item" data-screen="ai"><span class="icon">🤖</span>AI提案</button>
     <button class="side-item" data-screen="tasks"><span class="icon">✅</span>タスク</button>
@@ -1073,8 +1098,7 @@
         予定を追加
       </button>
       <button class="fab-main" id="fabMain">
-        ＋
-        <img src="MuK.jpg" class="mascot-img mascot-img-sm fab-badge-mascot" alt="" aria-hidden="true">
+        <img src="MuK.jpg" class="fab-main-mascot" alt="予定・タスク・AI提案を追加">
       </button>
     </div>
 
