@@ -196,6 +196,99 @@
   }
   .availability.open { background: #e3f7e8; color: #2e8b50; }
   .availability.full { background: #f0f0f0; color: #999; }
+
+  /* ホーム：スケジューラー */
+  .home-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+  .add-btn {
+    background: #1a3c63;
+    color: #fff;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .timeline-item {
+    display: flex;
+    gap: 10px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    border-left: 4px solid #1a3c63;
+  }
+  .timeline-item.free {
+    border-left: 4px dashed #aab;
+    background: #f8f9fc;
+  }
+  .timeline-time {
+    font-size: 12px;
+    color: #555;
+    width: 76px;
+    flex-shrink: 0;
+  }
+  .timeline-body .name { font-size: 14px; font-weight: bold; }
+  .timeline-body .sub { font-size: 12px; color: #888; }
+
+  /* タスク管理 */
+  .task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+  .task-item.done .task-name { text-decoration: line-through; color: #aaa; }
+  .task-item input[type=checkbox] { width: 18px; height: 18px; flex-shrink: 0; }
+  .task-name { flex: 1; font-size: 13px; }
+  .task-due { font-size: 11px; color: #999; }
+
+  /* モーダル */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.4);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal-overlay.active { display: flex; }
+  .modal-box {
+    background: #fff;
+    border-radius: 10px;
+    padding: 18px;
+    width: 90%;
+    max-width: 360px;
+  }
+  .modal-box h3 { margin: 0 0 12px; font-size: 15px; }
+  .modal-box label {
+    display: block;
+    font-size: 12px;
+    color: #666;
+    margin: 10px 0 4px;
+  }
+  .modal-box input {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+  }
+  .modal-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+  }
 </style>
 </head>
 <body>
@@ -213,10 +306,34 @@
 
   <!-- 機能1 -->
   <section class="screen active" id="home">
-    <div class="section-title">本日の空き時間</div>
-    <div class="card">
-      <h3>13:00 - 15:00（空き 2時間）</h3>
-      <div class="meta">渋谷区周辺</div>
+
+    <div class="home-header">
+      <div class="section-title" style="margin-top:0;">本日のスケジュール（Googleカレンダー連携）</div>
+      <button class="add-btn" id="openAddSchedule">＋予定を追加</button>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-time">09:00<br>-10:00</div>
+      <div class="timeline-body">
+        <div class="name">A商事 定期訪問</div>
+        <div class="sub">Googleカレンダー登録済み</div>
+      </div>
+    </div>
+
+    <div class="timeline-item free">
+      <div class="timeline-time">13:00<br>-15:00</div>
+      <div class="timeline-body">
+        <div class="name">空き時間（2時間）</div>
+        <div class="sub">渋谷区周辺／AI提案あり ↓</div>
+      </div>
+    </div>
+
+    <div class="timeline-item">
+      <div class="timeline-time">16:00<br>-17:00</div>
+      <div class="timeline-body">
+        <div class="name">社内ミーティング</div>
+        <div class="sub">Googleカレンダー登録済み</div>
+      </div>
     </div>
 
     <div class="section-title">AIからの訪問提案</div>
@@ -240,7 +357,60 @@
         <button class="btn reject">却下</button>
       </div>
     </div>
+
+    <div class="home-header">
+      <div class="section-title" style="margin-top:0;">タスク（Googleカレンダーにない「やることリスト」）</div>
+      <button class="add-btn" id="openAddTask">＋タスク追加</button>
+    </div>
+
+    <div class="task-item">
+      <input type="checkbox">
+      <div class="task-name">B工業 見積書を送付する</div>
+      <div class="task-due">期限：今日</div>
+    </div>
+    <div class="task-item">
+      <input type="checkbox">
+      <div class="task-name">C商店 先週の訪問フォロー電話</div>
+      <div class="task-due">期限：明日</div>
+    </div>
+    <div class="task-item done">
+      <input type="checkbox" checked>
+      <div class="task-name">D社 契約更新書類の準備</div>
+      <div class="task-due">完了済み</div>
+    </div>
   </section>
+
+  <!-- 予定追加モーダル -->
+  <div class="modal-overlay" id="addScheduleModal">
+    <div class="modal-box">
+      <h3>予定を追加（Googleカレンダーに登録）</h3>
+      <label>タイトル</label>
+      <input type="text" placeholder="例：E物産 新規訪問">
+      <label>日時</label>
+      <input type="text" placeholder="例：14:00 - 14:30">
+      <label>場所</label>
+      <input type="text" placeholder="例：東京都〇〇区...">
+      <div class="modal-actions">
+        <button class="btn accept" id="submitSchedule">登録する</button>
+        <button class="btn reject" id="closeAddSchedule">キャンセル</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- タスク追加モーダル -->
+  <div class="modal-overlay" id="addTaskModal">
+    <div class="modal-box">
+      <h3>タスクを追加</h3>
+      <label>内容</label>
+      <input type="text" placeholder="例：F社 見積フォロー">
+      <label>期限</label>
+      <input type="text" placeholder="例：明日">
+      <div class="modal-actions">
+        <button class="btn accept" id="submitTask">追加する</button>
+        <button class="btn reject" id="closeAddTask">キャンセル</button>
+      </div>
+    </div>
+  </div>
 
   <!-- 機能2 -->
   <section class="screen" id="route">
@@ -336,6 +506,37 @@
       screens.forEach(s => s.classList.remove('active'));
       tab.classList.add('active');
       document.getElementById(tab.dataset.screen).classList.add('active');
+    });
+  });
+
+  // モーダル開閉
+  function bindModal(openId, closeId, overlayId) {
+    document.getElementById(openId).addEventListener('click', () => {
+      document.getElementById(overlayId).classList.add('active');
+    });
+    document.getElementById(closeId).addEventListener('click', () => {
+      document.getElementById(overlayId).classList.remove('active');
+    });
+  }
+  bindModal('openAddSchedule', 'closeAddSchedule', 'addScheduleModal');
+  bindModal('openAddTask', 'closeAddTask', 'addTaskModal');
+
+  // 予定追加（ダミー：タイムラインに追加してモーダルを閉じる）
+  document.getElementById('submitSchedule').addEventListener('click', () => {
+    document.getElementById('addScheduleModal').classList.remove('active');
+    alert('Googleカレンダーに登録しました（モックのため実際の連携はしていません）');
+  });
+
+  // タスク追加（ダミー：リストに追加してモーダルを閉じる）
+  document.getElementById('submitTask').addEventListener('click', () => {
+    document.getElementById('addTaskModal').classList.remove('active');
+    alert('タスクを追加しました（モックのため実際の保存はしていません）');
+  });
+
+  // タスクの完了チェック切り替え
+  document.querySelectorAll('.task-item input[type=checkbox]').forEach(cb => {
+    cb.addEventListener('change', () => {
+      cb.closest('.task-item').classList.toggle('done', cb.checked);
     });
   });
 </script>
