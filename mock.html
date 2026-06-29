@@ -300,6 +300,85 @@
   }
   .fab-wrap.open .fab-main { transform: rotate(45deg); }
 
+  /* ===== AI提案：日付指定・時間帯・将来構想 ===== */
+  .ai-date-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+  .ai-date-nav button {
+    border: none;
+    cursor: pointer;
+  }
+  .ai-date-nav button:not(.ai-date-label) {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #eef1f5;
+    font-size: 16px;
+    color: #1a3c63;
+    flex-shrink: 0;
+  }
+  .ai-date-label {
+    flex: 1;
+    background: #eef1f5;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #1a3c63;
+  }
+  .ai-mini-calendar {
+    display: none;
+    background: #fff;
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .ai-mini-calendar.active { display: block; }
+  .ai-slot-block { margin-bottom: 18px; }
+  .ai-slot-head {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #1a3c63;
+    background: #eef1f5;
+    padding: 6px 12px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+  }
+  .ai-proposal-row {
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .ai-proposal-row .card {
+    min-width: 230px;
+    flex: 0 0 auto;
+    margin-bottom: 0;
+  }
+  .future-card {
+    border: 1px dashed #aab8c2;
+    position: relative;
+  }
+  .badge-soon {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: #ffb648;
+    color: #1a3c63;
+    font-size: 10px;
+    font-weight: bold;
+    padding: 3px 9px;
+    border-radius: 10px;
+  }
+  .future-block { margin-top: 10px; }
+  .future-label { font-size: 12px; font-weight: bold; color: #1a3c63; margin-bottom: 2px; }
+  .future-text { font-size: 12px; color: #555; line-height: 1.5; }
+
   /* ===== AIレコメンド／ルート／駐車場 共通 ===== */
   .map-placeholder {
     background: linear-gradient(135deg,#cfe3f5,#e8f1fa);
@@ -602,23 +681,105 @@
 
       <!-- AI提案 -->
       <section class="screen" id="ai">
-        <div class="section-title">空き時間に対するAIからの訪問提案</div>
-        <div class="card">
-          <span class="tag high">優先度：高</span><span class="tag low">モニタリング</span>
-          <h3>株式会社サンプル商事</h3>
-          <div class="meta">前回訪問から62日経過 ／ 想定所要時間：45分 ／ 距離：1.2km</div>
-          <div class="actions">
-            <button class="btn accept">カレンダーに追加</button>
-            <button class="btn reject">却下</button>
+
+        <div class="ai-date-nav">
+          <button id="aiPrevDay">‹</button>
+          <button class="ai-date-label" id="aiDateLabel">📅 2026年6月29日（月）</button>
+          <button id="aiNextDay">›</button>
+        </div>
+
+        <div class="ai-mini-calendar" id="aiMiniCalendar">
+          <div class="dow-row"><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span><span>日</span></div>
+          <div class="month-grid" id="aiMonthGrid"></div>
+        </div>
+
+        <div class="section-title">この日の空き時間帯</div>
+
+        <div class="ai-slot-block">
+          <div class="ai-slot-head">⏰ 10:00 - 12:00（空き2時間）</div>
+          <div class="ai-proposal-row">
+            <div class="card">
+              <span class="tag high">優先度：高</span><span class="tag low">モニタリング</span>
+              <h3>合同会社きずな福祉</h3>
+              <div class="meta">前回訪問から74日経過 ／ 想定所要時間：40分 ／ 距離：3.1km</div>
+              <div class="actions">
+                <button class="btn accept">カレンダーに追加</button>
+                <button class="btn reject">却下</button>
+              </div>
+            </div>
+            <div class="card">
+              <span class="tag mid">優先度：中</span><span class="tag low">新規営業</span>
+              <h3>有限会社さくら介護</h3>
+              <div class="meta">見込み顧客リスト掲載 ／ 想定所要時間：30分 ／ 距離：4.0km</div>
+              <div class="actions">
+                <button class="btn accept">カレンダーに追加</button>
+                <button class="btn reject">却下</button>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="card">
-          <span class="tag mid">優先度：中</span><span class="tag low">新規営業</span>
-          <h3>有限会社みらい工業</h3>
-          <div class="meta">見込み顧客リスト掲載 ／ 想定所要時間：30分 ／ 距離：2.8km</div>
-          <div class="actions">
-            <button class="btn accept">カレンダーに追加</button>
-            <button class="btn reject">却下</button>
+
+        <div class="ai-slot-block">
+          <div class="ai-slot-head">⏰ 13:00 - 15:00（空き2時間）</div>
+          <div class="ai-proposal-row">
+            <div class="card">
+              <span class="tag high">優先度：高</span><span class="tag low">モニタリング</span>
+              <h3>株式会社サンプル商事</h3>
+              <div class="meta">前回訪問から62日経過 ／ 想定所要時間：45分 ／ 距離：1.2km</div>
+              <div class="actions">
+                <button class="btn accept">カレンダーに追加</button>
+                <button class="btn reject">却下</button>
+              </div>
+            </div>
+            <div class="card">
+              <span class="tag mid">優先度：中</span><span class="tag low">新規営業</span>
+              <h3>有限会社みらい工業</h3>
+              <div class="meta">見込み顧客リスト掲載 ／ 想定所要時間：30分 ／ 距離：2.8km</div>
+              <div class="actions">
+                <button class="btn accept">カレンダーに追加</button>
+                <button class="btn reject">却下</button>
+              </div>
+            </div>
+            <div class="card">
+              <span class="tag low">優先度：低</span><span class="tag low">モニタリング</span>
+              <h3>株式会社ひまわり訪問看護</h3>
+              <div class="meta">前回訪問から30日経過 ／ 想定所要時間：20分 ／ 距離：1.8km</div>
+              <div class="actions">
+                <button class="btn accept">カレンダーに追加</button>
+                <button class="btn reject">却下</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ai-slot-block">
+          <div class="ai-slot-head">⏰ 16:00 - 17:00（空き1時間）</div>
+          <div class="ai-proposal-row">
+            <div class="card">
+              <span class="tag mid">優先度：中</span><span class="tag low">新規営業</span>
+              <h3>株式会社あおぞら商会</h3>
+              <div class="meta">見込み顧客リスト掲載 ／ 想定所要時間：25分 ／ 距離：2.2km</div>
+              <div class="actions">
+                <button class="btn accept">カレンダーに追加</button>
+                <button class="btn reject">却下</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-title">将来構想：自社BI連携による高精度AI提案（イメージ）</div>
+        <div class="card future-card">
+          <span class="badge-soon">Coming soon</span>
+          <span class="tag high">優先度：高</span><span class="tag low">課題提案型</span>
+          <h3>株式会社サンプル商事</h3>
+          <div class="meta">自社BIツールのデータ解析に基づく訪問提案</div>
+          <div class="future-block">
+            <div class="future-label">📊 課題分析（AI解析結果イメージ）</div>
+            <div class="future-text">直近3ヶ月の利用実績が前年比15%減少。設備の使用頻度低下が見られ、リプレースまたは追加提案の検討時期である可能性。</div>
+          </div>
+          <div class="future-block">
+            <div class="future-label">💬 フロントトーク提案（AI生成イメージ）</div>
+            <div class="future-text">「最近の設備のご利用状況についてお伺いしたく伺いました」と切り出し、利用減少の背景を確認しつつ、上位モデルへの切替メリットを提示する。</div>
           </div>
         </div>
       </section>
@@ -846,6 +1007,44 @@
     cell.className = 'month-cell' + (d === todayDate ? ' today' : '');
     cell.innerHTML = d + (eventDays.includes(d) ? '<div class="dots"><span></span></div>' : '');
     monthGrid.appendChild(cell);
+  }
+
+  // ===== AI提案：日付指定（簡易デモ） =====
+  const aiDates = [
+    '2026年6月27日（土）', '2026年6月28日（日）', '2026年6月29日（月）',
+    '2026年6月30日（火）', '2026年7月1日（水）', '2026年7月2日（木）'
+  ];
+  let aiDateIndex = 2; // 6/29を初期値
+  const aiDateLabel = document.getElementById('aiDateLabel');
+  function renderAiDateLabel() {
+    aiDateLabel.textContent = '📅 ' + aiDates[aiDateIndex];
+  }
+  document.getElementById('aiPrevDay').addEventListener('click', () => {
+    aiDateIndex = (aiDateIndex - 1 + aiDates.length) % aiDates.length;
+    renderAiDateLabel();
+  });
+  document.getElementById('aiNextDay').addEventListener('click', () => {
+    aiDateIndex = (aiDateIndex + 1) % aiDates.length;
+    renderAiDateLabel();
+  });
+
+  const aiMiniCalendar = document.getElementById('aiMiniCalendar');
+  aiDateLabel.addEventListener('click', () => {
+    aiMiniCalendar.classList.toggle('active');
+  });
+
+  // AI提案用ミニカレンダー（ダミー生成）
+  const aiMonthGrid = document.getElementById('aiMonthGrid');
+  for (let d = 1; d <= 30; d++) {
+    const cell = document.createElement('div');
+    cell.className = 'month-cell' + (d === 29 ? ' today' : '');
+    cell.style.cursor = 'pointer';
+    cell.textContent = d;
+    cell.addEventListener('click', () => {
+      aiDateLabel.textContent = '📅 2026年6月' + d + '日';
+      aiMiniCalendar.classList.remove('active');
+    });
+    aiMonthGrid.appendChild(cell);
   }
 
   // ===== FAB（親指操作） =====
