@@ -440,7 +440,39 @@
   }
   .route-parking .p-name { color: #444; }
   .route-parking .p-sub { color: #999; font-size: 11px; }
+  .route-parking.full { background: #fdf0ee; }
+  .route-parking .p-sub.status-full { color: #c0392b; font-weight: bold; }
+  .alt-parking-btn {
+    display: block;
+    margin: 6px 0 0 34px;
+    background: none;
+    border: none;
+    color: #2563ad;
+    font-size: 12px;
+    cursor: pointer;
+    text-decoration: underline;
+  }
 
+  .parking-dest-select {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #eef1f5;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+  .parking-dest-select label { font-size: 12px; color: #555; flex-shrink: 0; }
+  .parking-dest-select select {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    border: 1px solid #ccd5e0;
+    font-size: 13px;
+    background: #fff;
+    color: #1a3c63;
+    font-weight: bold;
+  }
   .parking-item {
     display: flex;
     justify-content: space-between;
@@ -699,8 +731,8 @@
           <div class="ai-slot-head">⏰ 10:00 - 12:00（空き2時間）</div>
           <div class="ai-proposal-row">
             <div class="card">
-              <span class="tag high">優先度：高</span><span class="tag low">モニタリング</span>
-              <h3>合同会社きずな福祉</h3>
+              <span class="tag high">優先度：高</span><span class="tag low">個人</span><span class="tag low">モニタリング</span>
+              <h3>山田太郎 様</h3>
               <div class="meta">前回訪問から74日経過 ／ 想定所要時間：40分 ／ 距離：3.1km</div>
               <div class="actions">
                 <button class="btn accept">カレンダーに追加</button>
@@ -741,8 +773,8 @@
               </div>
             </div>
             <div class="card">
-              <span class="tag low">優先度：低</span><span class="tag low">モニタリング</span>
-              <h3>株式会社ひまわり訪問看護</h3>
+              <span class="tag low">優先度：低</span><span class="tag low">個人</span><span class="tag low">モニタリング</span>
+              <h3>田中花子 様</h3>
               <div class="meta">前回訪問から30日経過 ／ 想定所要時間：20分 ／ 距離：1.8km</div>
               <div class="actions">
                 <button class="btn accept">カレンダーに追加</button>
@@ -759,6 +791,15 @@
               <span class="tag mid">優先度：中</span><span class="tag low">新規営業</span>
               <h3>株式会社あおぞら商会</h3>
               <div class="meta">見込み顧客リスト掲載 ／ 想定所要時間：25分 ／ 距離：2.2km</div>
+              <div class="actions">
+                <button class="btn accept">カレンダーに追加</button>
+                <button class="btn reject">却下</button>
+              </div>
+            </div>
+            <div class="card">
+              <span class="tag mid">優先度：中</span><span class="tag low">個人</span><span class="tag low">モニタリング</span>
+              <h3>中村一郎 様</h3>
+              <div class="meta">前回訪問から45日経過 ／ 想定所要時間：30分 ／ 距離：3.5km</div>
               <div class="actions">
                 <button class="btn accept">カレンダーに追加</button>
                 <button class="btn reject">却下</button>
@@ -840,10 +881,11 @@
               <div class="sub">到着目安 14:20／滞在30分</div>
             </div>
           </div>
-          <div class="route-parking">
+          <div class="route-parking full">
             <span class="p-name">🅿️ 三井のリパーク渋谷南</span>
-            <span class="p-sub">空車1台・徒歩4分</span>
+            <span class="p-sub status-full">満車</span>
           </div>
+          <button class="alt-parking-btn" data-dest="mirai">満車のため他の駐車場を選ぶ →</button>
         </div>
 
         <div class="route-item">
@@ -857,32 +899,68 @@
         </div>
       </section>
 
-      <!-- 駐車場リスト（単独メニュー） -->
+      <!-- 駐車場リスト（単独メニュー：訪問先ごとに切替） -->
       <section class="screen" id="parking">
-        <div class="section-title">近隣パーキングリスト（株式会社サンプル商事 周辺）</div>
-
-        <div class="parking-item">
-          <div>
-            <div class="name">タイムズ渋谷第3</div>
-            <div class="sub">徒歩2分／¥300・20分</div>
-          </div>
-          <div class="availability open">空車 4台</div>
+        <div class="parking-dest-select">
+          <label for="parkingDestSelect">🏢 訪問先を選択</label>
+          <select id="parkingDestSelect">
+            <option value="sample">株式会社サンプル商事</option>
+            <option value="mirai">有限会社みらい工業</option>
+          </select>
         </div>
 
-        <div class="parking-item">
-          <div>
-            <div class="name">三井のリパーク渋谷南</div>
-            <div class="sub">徒歩4分／¥400・30分</div>
+        <div class="section-title" id="parkingListTitle">株式会社サンプル商事 への訪問用 近隣パーキング</div>
+
+        <div class="parking-list" data-dest="sample">
+          <div class="parking-item">
+            <div>
+              <div class="name">タイムズ渋谷第3</div>
+              <div class="sub">徒歩2分／¥300・20分</div>
+            </div>
+            <div class="availability open">空車 4台</div>
           </div>
-          <div class="availability open">空車 1台</div>
+
+          <div class="parking-item">
+            <div>
+              <div class="name">三井のリパーク渋谷南</div>
+              <div class="sub">徒歩4分／¥400・30分</div>
+            </div>
+            <div class="availability open">空車 1台</div>
+          </div>
+
+          <div class="parking-item">
+            <div>
+              <div class="name">タイムズ渋谷駅前</div>
+              <div class="sub">徒歩1分／¥500・20分</div>
+            </div>
+            <div class="availability full">満車</div>
+          </div>
         </div>
 
-        <div class="parking-item">
-          <div>
-            <div class="name">タイムズ渋谷駅前</div>
-            <div class="sub">徒歩1分／¥500・20分</div>
+        <div class="parking-list" data-dest="mirai" style="display:none;">
+          <div class="parking-item">
+            <div>
+              <div class="name">三井のリパーク渋谷南</div>
+              <div class="sub">徒歩4分／¥400・30分</div>
+            </div>
+            <div class="availability full">満車</div>
           </div>
-          <div class="availability full">満車</div>
+
+          <div class="parking-item">
+            <div>
+              <div class="name">タイムズ恵比寿第2</div>
+              <div class="sub">徒歩6分／¥350・20分</div>
+            </div>
+            <div class="availability open">空車 2台</div>
+          </div>
+
+          <div class="parking-item">
+            <div>
+              <div class="name">リパーク恵比寿駅東</div>
+              <div class="sub">徒歩8分／¥300・20分</div>
+            </div>
+            <div class="availability open">空車 5台</div>
+          </div>
         </div>
 
         <div class="card" style="margin-top:14px;">
@@ -916,6 +994,7 @@
 
     <!-- 親指で完結するFAB（ホームのみ表示） -->
     <div class="fab-wrap" id="fabWrap">
+      <button class="fab-option" id="openAddAi">🤖 AI提案を追加</button>
       <button class="fab-option" id="openAddTask">✅ タスクを追加</button>
       <button class="fab-option" id="openAddSchedule">📅 予定を追加</button>
       <button class="fab-main" id="fabMain">＋</button>
@@ -975,16 +1054,15 @@
   const fabWrap = document.getElementById('fabWrap');
   const titles = { home: 'ホーム', ai: 'AI提案', tasks: 'タスク', route: 'ルート提案', parking: '駐車場リスト', visit: '滞在アラート' };
 
+  function goToScreen(target) {
+    sideItems.forEach(i => i.classList.toggle('active', i.dataset.screen === target));
+    screens.forEach(s => s.classList.toggle('active', s.id === target));
+    topbarTitle.textContent = titles[target];
+    fabWrap.style.display = (target === 'home') ? 'flex' : 'none';
+  }
+
   sideItems.forEach(item => {
-    item.addEventListener('click', () => {
-      sideItems.forEach(i => i.classList.remove('active'));
-      screens.forEach(s => s.classList.remove('active'));
-      item.classList.add('active');
-      const target = item.dataset.screen;
-      document.getElementById(target).classList.add('active');
-      topbarTitle.textContent = titles[target];
-      fabWrap.style.display = (target === 'home') ? 'flex' : 'none';
-    });
+    item.addEventListener('click', () => goToScreen(item.dataset.screen));
   });
 
   // ===== 日／週／月 切替 =====
@@ -1065,6 +1143,32 @@
   }
   bindModal('openAddSchedule', 'closeAddSchedule', 'addScheduleModal');
   bindModal('openAddTask', 'closeAddTask', 'addTaskModal');
+
+  document.getElementById('openAddAi').addEventListener('click', () => {
+    fabWrap.classList.remove('open');
+    goToScreen('ai');
+  });
+
+  // ===== 駐車場リスト：訪問先ごとの切替 =====
+  const parkingDestNames = { sample: '株式会社サンプル商事', mirai: '有限会社みらい工業' };
+  const parkingDestSelect = document.getElementById('parkingDestSelect');
+  const parkingListTitle = document.getElementById('parkingListTitle');
+  function showParkingDest(dest) {
+    parkingDestSelect.value = dest;
+    parkingListTitle.textContent = parkingDestNames[dest] + ' への訪問用 近隣パーキング';
+    document.querySelectorAll('.parking-list').forEach(list => {
+      list.style.display = (list.dataset.dest === dest) ? 'block' : 'none';
+    });
+  }
+  parkingDestSelect.addEventListener('change', () => showParkingDest(parkingDestSelect.value));
+
+  // ルート提案で駐車場が満車のとき、駐車場リストへ誘導
+  document.querySelectorAll('.alt-parking-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      goToScreen('parking');
+      showParkingDest(btn.dataset.dest);
+    });
+  });
 
   document.getElementById('submitSchedule').addEventListener('click', () => {
     document.getElementById('addScheduleModal').classList.remove('active');
