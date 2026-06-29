@@ -25,8 +25,8 @@
   .sidebar {
     width: 84px;
     flex-shrink: 0;
-    background: #1a3c63;
-    color: #cfe0f2;
+    background: #2E7D32;
+    color: #d7ead7;
     display: flex;
     flex-direction: column;
     padding: 14px 0;
@@ -42,7 +42,7 @@
   .side-item {
     background: none;
     border: none;
-    color: #cfe0f2;
+    color: #d7ead7;
     padding: 12px 4px;
     font-size: 11px;
     cursor: pointer;
@@ -56,7 +56,7 @@
   .side-item.active {
     background: rgba(255,255,255,0.12);
     color: #fff;
-    border-left: 3px solid #ffb648;
+    border-left: 3px solid #8BC34A;
     font-weight: bold;
   }
 
@@ -68,7 +68,7 @@
     position: relative;
   }
   .topbar {
-    background: #1a3c63;
+    background: #2E7D32;
     color: #fff;
     padding: 14px 20px;
     font-size: 16px;
@@ -111,7 +111,7 @@
     font-size: 13px;
     cursor: pointer;
   }
-  .btn.accept { background: #1a3c63; color: #fff; }
+  .btn.accept { background: #2E7D32; color: #fff; }
   .btn.reject { background: #eee; color: #555; }
   .btn.small { flex: none; padding: 6px 10px; font-size: 12px; }
 
@@ -142,7 +142,7 @@
     color: #555;
   }
   .view-switch button.active {
-    background: #1a3c63;
+    background: #2E7D32;
     color: #fff;
     font-weight: bold;
   }
@@ -164,7 +164,7 @@
     padding: 10px 12px;
     margin-bottom: 8px;
     box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    border-left: 4px solid #1a3c63;
+    border-left: 4px solid #2E7D32;
   }
   .timeline-item.free {
     border-left: 4px dashed #aab;
@@ -206,11 +206,11 @@
   }
   .week-col .dow { font-size: 11px; color: #999; margin-bottom: 6px; }
   .week-col .date { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
-  .week-col.today .date { color: #1a3c63; }
+  .week-col.today .date { color: #2E7D32; }
   .week-dot {
     width: 6px; height: 6px;
     border-radius: 50%;
-    background: #1a3c63;
+    background: #2E7D32;
     margin: 3px auto;
   }
   .week-dot.free { background: #aab; }
@@ -230,10 +230,10 @@
     box-shadow: 0 1px 2px rgba(0,0,0,0.05);
     position: relative;
   }
-  .month-cell.today { outline: 2px solid #1a3c63; }
+  .month-cell.today { outline: 2px solid #2E7D32; }
   .month-cell .dots { position: absolute; bottom: 4px; left: 4px; display: flex; gap: 2px; }
   .month-cell .dots span {
-    width: 5px; height: 5px; border-radius: 50%; background: #1a3c63;
+    width: 5px; height: 5px; border-radius: 50%; background: #2E7D32;
   }
   .dow-row {
     display: grid;
@@ -282,16 +282,17 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.18);
     border: none;
     cursor: pointer;
-    color: #1a3c63;
+    color: #2E7D32;
     font-weight: bold;
   }
   .fab-wrap.open .fab-option { display: flex; }
   .fab-main {
+    position: relative;
     width: 56px;
     height: 56px;
     border-radius: 50%;
-    background: #ffb648;
-    color: #1a3c63;
+    background: #8BC34A;
+    color: #2E7D32;
     border: none;
     font-size: 26px;
     box-shadow: 0 3px 10px rgba(0,0,0,0.25);
@@ -299,6 +300,66 @@
     transition: transform 0.15s;
   }
   .fab-wrap.open .fab-main { transform: rotate(45deg); }
+
+  /* ===== マスコット（むすぼなグリーン） ===== */
+  .mascot {
+    position: relative;
+    display: inline-block;
+    width: 26px;
+    height: 30px;
+    flex-shrink: 0;
+  }
+  .mascot .m-body {
+    position: absolute;
+    top: 6px; left: 0;
+    width: 26px; height: 22px;
+    background: #4CAF50;
+    border-radius: 45% 45% 50% 50% / 55% 55% 45% 45%;
+  }
+  .mascot .m-antenna-stick {
+    position: absolute;
+    top: 0; left: 11px;
+    width: 2px; height: 7px;
+    background: #2E7D32;
+  }
+  .mascot .m-antenna-ball {
+    position: absolute;
+    top: -3px; left: 9px;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: #2E7D32;
+  }
+  .mascot .m-visor {
+    position: absolute;
+    top: 15px; left: 4px;
+    width: 18px; height: 7px;
+    background: #fff;
+    border-radius: 3px;
+  }
+  .mascot .m-eye {
+    position: absolute;
+    top: 1px;
+    width: 3px; height: 5px;
+    background: #20231f;
+    border-radius: 1px;
+  }
+  .mascot .m-eye.l { left: 3px; }
+  .mascot .m-eye.r { left: 11px; }
+
+  .mascot.mascot-sm { width: 18px; height: 21px; transform: scale(0.7); transform-origin: top right; }
+  .mascot.mascot-lg { transform: scale(1.7); transform-origin: top center; margin-bottom: 14px; }
+
+  .fab-badge-mascot {
+    position: absolute;
+    top: -10px;
+    right: -4px;
+  }
+  .fab-wrap.open .fab-badge-mascot { display: none; }
+  .fab-option .mascot { margin-right: 2px; vertical-align: middle; }
+  .alert-mascot-row {
+    display: flex;
+    justify-content: center;
+  }
 
   /* ===== AI提案：日付指定・時間帯・将来構想 ===== */
   .ai-date-nav {
@@ -317,7 +378,7 @@
     border-radius: 50%;
     background: #eef1f5;
     font-size: 16px;
-    color: #1a3c63;
+    color: #2E7D32;
     flex-shrink: 0;
   }
   .ai-date-label {
@@ -327,7 +388,7 @@
     padding: 10px;
     font-size: 14px;
     font-weight: bold;
-    color: #1a3c63;
+    color: #2E7D32;
   }
   .ai-mini-calendar {
     display: none;
@@ -343,7 +404,7 @@
     display: inline-block;
     font-size: 13px;
     font-weight: bold;
-    color: #1a3c63;
+    color: #2E7D32;
     background: #eef1f5;
     padding: 6px 12px;
     border-radius: 6px;
@@ -369,14 +430,14 @@
     top: 12px;
     right: 12px;
     background: #ffb648;
-    color: #1a3c63;
+    color: #2E7D32;
     font-size: 10px;
     font-weight: bold;
     padding: 3px 9px;
     border-radius: 10px;
   }
   .future-block { margin-top: 10px; }
-  .future-label { font-size: 12px; font-weight: bold; color: #1a3c63; margin-bottom: 2px; }
+  .future-label { font-size: 12px; font-weight: bold; color: #2E7D32; margin-bottom: 2px; }
   .future-text { font-size: 12px; color: #555; line-height: 1.5; }
 
   /* ===== AIレコメンド／ルート／駐車場 共通 ===== */
@@ -401,7 +462,7 @@
     font-size: 11px;
     padding: 5px 10px;
     border-radius: 6px;
-    color: #1a3c63;
+    color: #2E7D32;
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
   }
   .route-decision {
@@ -415,7 +476,7 @@
     display: block;
     font-size: 13px;
     font-weight: bold;
-    color: #1a3c63;
+    color: #2E7D32;
     margin-bottom: 8px;
   }
   .nav-btn {
@@ -423,7 +484,7 @@
     width: 100%;
     margin-top: 8px;
     padding: 9px;
-    background: #1a3c63;
+    background: #2E7D32;
     color: #fff;
     border: none;
     border-radius: 6px;
@@ -447,7 +508,7 @@
   .route-item-head { display: flex; align-items: center; gap: 10px; }
   .route-num {
     width: 24px; height: 24px;
-    background: #1a3c63;
+    background: #2E7D32;
     color: #fff;
     border-radius: 50%;
     display: flex;
@@ -502,7 +563,7 @@
     border: 1px solid #ccd5e0;
     font-size: 13px;
     background: #fff;
-    color: #1a3c63;
+    color: #2E7D32;
     font-weight: bold;
   }
   .parking-item {
@@ -1041,11 +1102,27 @@
     </main>
 
     <!-- 親指で完結するFAB（ホームのみ表示） -->
-    <div class="fab-wrap" id="fabWrap">
+    <div class="fab-wrap" id="fabWrap" style="position:relative;">
       <button class="fab-option" id="openAddAi">🤖 AI提案を追加</button>
       <button class="fab-option" id="openAddTask">✅ タスクを追加</button>
-      <button class="fab-option" id="openAddSchedule">📅 予定を追加</button>
-      <button class="fab-main" id="fabMain">＋</button>
+      <button class="fab-option" id="openAddSchedule">
+        <span class="mascot mascot-sm" aria-hidden="true">
+          <span class="m-antenna-ball"></span>
+          <span class="m-antenna-stick"></span>
+          <span class="m-body"></span>
+          <span class="m-visor"><span class="m-eye l"></span><span class="m-eye r"></span></span>
+        </span>
+        予定を追加
+      </button>
+      <button class="fab-main" id="fabMain">
+        ＋
+        <span class="mascot mascot-sm fab-badge-mascot" aria-hidden="true">
+          <span class="m-antenna-ball"></span>
+          <span class="m-antenna-stick"></span>
+          <span class="m-body"></span>
+          <span class="m-visor"><span class="m-eye l"></span><span class="m-eye r"></span></span>
+        </span>
+      </button>
     </div>
 
   </div>
@@ -1086,6 +1163,14 @@
 <!-- 強制ポップアップ通知（滞在アラート本番イメージ） -->
 <div class="alert-popup-overlay" id="alertPopup">
   <div class="alert-popup-box">
+    <div class="alert-mascot-row">
+      <span class="mascot mascot-lg" aria-hidden="true">
+        <span class="m-antenna-ball"></span>
+        <span class="m-antenna-stick"></span>
+        <span class="m-body"></span>
+        <span class="m-visor"><span class="m-eye l"></span><span class="m-eye r"></span></span>
+      </span>
+    </div>
     <div class="big-icon">⏰</div>
     <h2>退出時間です！</h2>
     <p>株式会社サンプル商事での滞在予定時間が終了しました。次の訪問先への移動を開始してください。</p>
