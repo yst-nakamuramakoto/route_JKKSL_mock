@@ -380,23 +380,55 @@
   .future-text { font-size: 12px; color: #555; line-height: 1.5; }
 
   /* ===== AIレコメンド／ルート／駐車場 共通 ===== */
-  .map-placeholder {
-    background: linear-gradient(135deg,#cfe3f5,#e8f1fa);
-    height: 200px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #5a7fa3;
-    font-size: 13px;
-    margin-bottom: 12px;
+  .map-frame {
     position: relative;
+    height: 220px;
+    border-radius: 10px;
     overflow: hidden;
+    margin-bottom: 12px;
+    background: #dde5ec;
   }
-  .map-placeholder::after {
-    content: "📍 → 📍 → 📍 → 🏁";
-    font-size: 20px;
+  .map-frame iframe {
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .map-route-overlay {
     position: absolute;
+    bottom: 8px;
+    left: 8px;
+    background: rgba(255,255,255,0.9);
+    font-size: 11px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    color: #1a3c63;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+  }
+  .route-decision {
+    background: #fff;
+    border-radius: 10px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  }
+  .route-decision-label {
+    display: block;
+    font-size: 13px;
+    font-weight: bold;
+    color: #1a3c63;
+    margin-bottom: 8px;
+  }
+  .nav-btn {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    background: #1a3c63;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
   }
   .route-summary {
     display: flex;
@@ -852,11 +884,25 @@
 
       <!-- ルート提案（駐車場デフォルト統合） -->
       <section class="screen" id="route">
-        <div class="map-placeholder"></div>
+
+        <div class="map-frame">
+          <iframe src="https://www.google.com/maps?q=渋谷区&output=embed" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+          <div class="map-route-overlay">📍① → 📍② → 🏁③（実際は移動ルートを地図上に描画）</div>
+        </div>
+
         <div class="route-summary">
           <span>総移動距離：12.4km</span>
           <span>総移動時間：38分</span>
         </div>
+
+        <div class="route-decision">
+          <span class="route-decision-label">このルート案、どうしますか？</span>
+          <div class="actions">
+            <button class="btn accept" id="acceptRouteBtn">✅ このルートを採用する</button>
+            <button class="btn reject" id="regenRouteBtn">🔄 別ルートを再提案</button>
+          </div>
+        </div>
+
         <div class="section-title">最適訪問順（駐車場の提案を含む）</div>
 
         <div class="route-item">
@@ -871,6 +917,7 @@
             <span class="p-name">🅿️ タイムズ渋谷第3</span>
             <span class="p-sub">空車4台・徒歩2分</span>
           </div>
+          <button class="nav-btn">🚗 駐車場までナビ開始（到着後、徒歩2分で訪問先へ）</button>
         </div>
 
         <div class="route-item">
@@ -896,6 +943,7 @@
               <div class="sub">到着目安 15:10</div>
             </div>
           </div>
+          <button class="nav-btn">🚗 事業所までナビ開始</button>
         </div>
       </section>
 
@@ -1167,6 +1215,19 @@
     btn.addEventListener('click', () => {
       goToScreen('parking');
       showParkingDest(btn.dataset.dest);
+    });
+  });
+
+  // ===== ルート提案：採用／再提案、ナビ開始（ダミー） =====
+  document.getElementById('acceptRouteBtn').addEventListener('click', () => {
+    alert('このルートを採用しました（モックのため実際のカレンダー反映はしていません）');
+  });
+  document.getElementById('regenRouteBtn').addEventListener('click', () => {
+    alert('別のルート案を再提案します（モックのため実際の再計算はしていません）');
+  });
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      alert('Googleマップでナビゲーションを開始します（モックのため実際の連携はしていません）\n※駐車場が目的地の場合は駐車場までを案内し、到着後は徒歩で訪問先へ向かう想定です');
     });
   });
 
