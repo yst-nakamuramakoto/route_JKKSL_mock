@@ -143,6 +143,35 @@
   }
   .section-title:first-child { margin-top: 0; }
 
+  /* ===== ホーム：日付表示 ===== */
+  .home-date-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+  }
+  .home-date-arrow {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: none;
+    background: #eef1f5;
+    color: #2E7D32;
+    font-size: 15px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .home-date-badge {
+    flex: 1;
+    background: #eef1f5;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    color: #2E7D32;
+    text-align: center;
+  }
+
   /* ===== ホーム：日／週／月切替 ===== */
   .view-switch {
     display: flex;
@@ -221,30 +250,19 @@
   }
   .delete-x:hover { color: #c0392b; }
 
-  /* 週表示（簡易） */
-  .week-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 6px;
+  /* 週表示：日ごとのタイムライン */
+  .week-day-block { margin-bottom: 16px; }
+  .week-day-head {
+    font-size: 13px;
+    font-weight: bold;
+    color: #555;
+    background: #eef1f5;
+    border-radius: 6px;
+    padding: 5px 10px;
+    margin-bottom: 6px;
   }
-  .week-col {
-    background: #fff;
-    border-radius: 8px;
-    padding: 8px 4px;
-    text-align: center;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-    min-height: 130px;
-  }
-  .week-col .dow { font-size: 11px; color: #999; margin-bottom: 6px; }
-  .week-col .date { font-size: 14px; font-weight: bold; margin-bottom: 8px; }
-  .week-col.today .date { color: #2E7D32; }
-  .week-dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: #2E7D32;
-    margin: 3px auto;
-  }
-  .week-dot.free { background: #aab; }
+  .week-day-head.today { background: #2E7D32; color: #fff; }
+  .week-day-empty { font-size: 12px; color: #aaa; padding: 6px 4px 0; }
 
   /* 月表示（簡易） */
   .month-grid {
@@ -728,6 +746,12 @@
       <!-- ホーム：日／週／月スケジューラー＋タスク -->
       <section class="screen active" id="home">
 
+        <div class="home-date-nav" id="homeDateNav">
+          <button class="home-date-arrow" id="homeDatePrev" style="display:none;">‹</button>
+          <div class="home-date-badge" id="homeDateLabel">📅 2026/06/27（土）</div>
+          <button class="home-date-arrow" id="homeDateNext" style="display:none;">›</button>
+        </div>
+
         <div class="view-switch">
           <button class="vs-btn active" data-view="day">日</button>
           <button class="vs-btn" data-view="week">週</button>
@@ -840,18 +864,10 @@
           </div>
         </div>
 
-        <!-- 週表示（簡易） -->
+        <!-- 週表示：日表示と同様にタイムライン形式 -->
         <div class="view-pane" id="view-week">
           <div class="section-title">今週のスケジュール</div>
-          <div class="week-grid">
-            <div class="week-col"><div class="dow">月</div><div class="date">23</div><div class="week-dot"></div><div class="week-dot"></div><div class="week-dot"></div></div>
-            <div class="week-col"><div class="dow">火</div><div class="date">24</div><div class="week-dot"></div><div class="week-dot"></div><div class="week-dot free"></div></div>
-            <div class="week-col"><div class="dow">水</div><div class="date">25</div><div class="week-dot"></div></div>
-            <div class="week-col"><div class="dow">木</div><div class="date">26</div><div class="week-dot"></div><div class="week-dot"></div></div>
-            <div class="week-col today"><div class="dow">金</div><div class="date">27</div><div class="week-dot"></div><div class="week-dot"></div><div class="week-dot"></div><div class="week-dot free"></div></div>
-            <div class="week-col"><div class="dow">土</div><div class="date">28</div><div class="week-dot"></div></div>
-            <div class="week-col"><div class="dow">日</div><div class="date">29</div></div>
-          </div>
+          <div class="week-list" id="weekList"></div>
         </div>
 
         <!-- 月表示（簡易） -->
@@ -1265,33 +1281,167 @@
     item.addEventListener('click', () => goToScreen(item.dataset.screen));
   });
 
-  // ===== 日／週／月 切替 =====
+  // ===== 日／週／月 切替＋日付ナビゲーション =====
+  const TODAY = new Date(2026, 5, 27); // 2026/06/27（土）
+  const DOW_LABELS = ['月', '火', '水', '木', '金', '土', '日'];
+  const pad2 = n => String(n).padStart(2, '0');
+  const fmtYMD = d => d.getFullYear() + '/' + pad2(d.getMonth() + 1) + '/' + pad2(d.getDate());
+  const fmtMD = d => pad2(d.getMonth() + 1) + '/' + pad2(d.getDate());
+  const isSameDate = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+  function getMonday(date) {
+    const d = new Date(date);
+    const day = d.getDay();
+    d.setDate(d.getDate() + (day === 0 ? -6 : 1 - day));
+    d.setHours(0, 0, 0, 0);
+    return d;
+  }
+
+  const homeDateLabel = document.getElementById('homeDateLabel');
+  const homeDatePrev = document.getElementById('homeDatePrev');
+  const homeDateNext = document.getElementById('homeDateNext');
+  let currentView = 'day';
+  let weekOffset = 0;
+  let monthOffset = 0;
+
+  // 曜日ごとの予定（週表示デモ用／土曜＝本日は日表示と同じ予定）
+  const weekEventsByDow = {
+    0: [
+      { time: '09:00-09:30', name: 'B興産 来訪対応' },
+      { time: '11:00-11:45', name: '山田太郎 様 モニタリング訪問' },
+      { time: '15:00-15:30', name: '社内ミーティング' }
+    ],
+    1: [
+      { time: '10:00-10:30', name: 'C商店 契約更新の確認' },
+      { time: '13:00-15:00', name: '空き時間（2時間）', free: true },
+      { time: '16:00-16:30', name: '有限会社さくら介護 新規営業' }
+    ],
+    2: [
+      { time: '14:00-14:45', name: '株式会社サンプル商事 定期訪問' }
+    ],
+    3: [
+      { time: '09:30-10:00', name: 'D社 見積りフォロー電話' },
+      { time: '13:30-14:15', name: '中村一郎 様 モニタリング訪問' }
+    ],
+    4: [
+      { time: '09:00-09:45', name: '有限会社みらい工業 新規営業' },
+      { time: '11:00-11:30', name: '田中花子 様 モニタリング訪問' },
+      { time: '16:00-17:00', name: '社内ミーティング' }
+    ],
+    5: [
+      { time: '08:30-09:00', name: '事業所 → A商事 へ移動' },
+      { time: '09:00-10:00', name: 'A商事 定期訪問' },
+      { time: '10:15-11:00', name: 'B興産 新規商談' },
+      { time: '11:15-11:45', name: '鈴木次郎 様 モニタリング訪問' },
+      { time: '12:00-13:00', name: '休憩（昼食）' },
+      { time: '13:00-15:00', name: '空き時間（2時間）', free: true },
+      { time: '15:15-15:45', name: 'C商店 契約更新の確認' },
+      { time: '16:00-17:00', name: '社内ミーティング' },
+      { time: '17:15-17:30', name: 'D社 見積りフォロー電話' }
+    ],
+    6: []
+  };
+
+  function renderWeek() {
+    const monday = getMonday(TODAY);
+    monday.setDate(monday.getDate() + weekOffset * 7);
+    const weekList = document.getElementById('weekList');
+    weekList.innerHTML = '';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(d.getDate() + i);
+      const block = document.createElement('div');
+      block.className = 'week-day-block';
+      const isToday = isSameDate(d, TODAY);
+      const head = document.createElement('div');
+      head.className = 'week-day-head' + (isToday ? ' today' : '');
+      head.textContent = DOW_LABELS[i] + ' ' + fmtMD(d) + (isToday ? '（本日）' : '');
+      block.appendChild(head);
+      const events = weekEventsByDow[i] || [];
+      if (events.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'week-day-empty';
+        empty.textContent = '予定なし';
+        block.appendChild(empty);
+      } else {
+        events.forEach(ev => {
+          const item = document.createElement('div');
+          item.className = 'timeline-item' + (ev.free ? ' free' : '');
+          item.innerHTML = '<div class="timeline-time">' + ev.time.replace('-', '<br>-') + '</div>' +
+            '<div class="timeline-body"><div class="name">' + ev.name + '</div></div>' +
+            (ev.free ? '<button class="goto-ai-btn" data-screen="ai">🤖 AI提案を見る</button>' : '');
+          block.appendChild(item);
+        });
+      }
+      weekList.appendChild(block);
+    }
+    const sunday = new Date(monday);
+    sunday.setDate(sunday.getDate() + 6);
+    homeDateLabel.textContent = '📅 ' + fmtYMD(monday) + '～' + fmtYMD(sunday);
+  }
+  document.getElementById('weekList').addEventListener('click', e => {
+    const btn = e.target.closest('.goto-ai-btn');
+    if (btn) goToScreen(btn.dataset.screen);
+  });
+
+  // 月表示の簡易カレンダー生成（ダミー）
+  const monthGrid = document.getElementById('monthGrid');
+  const eventDayCounts = {
+    1: 2, 2: 1, 3: 3, 4: 1, 5: 2, 8: 2, 9: 3, 10: 1, 11: 2,
+    12: 1, 15: 3, 16: 1, 17: 2, 18: 1, 19: 2, 22: 1, 23: 3,
+    24: 2, 25: 1, 26: 2, 27: 4, 28: 2, 29: 1
+  };
+  function renderMonth() {
+    const target = new Date(TODAY.getFullYear(), TODAY.getMonth() + monthOffset, 1);
+    const year = target.getFullYear();
+    const month = target.getMonth();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    monthGrid.innerHTML = '';
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      const isToday = monthOffset === 0 && d === TODAY.getDate();
+      cell.className = 'month-cell' + (isToday ? ' today' : '');
+      const count = eventDayCounts[d] || 0;
+      const dots = '<span></span>'.repeat(Math.min(count, 4));
+      cell.innerHTML = d + (count ? '<div class="dots">' + dots + '</div>' : '');
+      monthGrid.appendChild(cell);
+    }
+    homeDateLabel.textContent = '📅 ' + year + '/' + pad2(month + 1);
+  }
+
+  function renderHomeDate() {
+    if (currentView === 'day') {
+      homeDateLabel.textContent = '📅 ' + fmtYMD(TODAY) + '（土）';
+    } else if (currentView === 'week') {
+      renderWeek();
+    } else if (currentView === 'month') {
+      renderMonth();
+    }
+    const navigable = currentView !== 'day';
+    homeDatePrev.style.display = navigable ? '' : 'none';
+    homeDateNext.style.display = navigable ? '' : 'none';
+  }
+
   document.querySelectorAll('.vs-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.vs-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.view-pane').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       document.getElementById('view-' + btn.dataset.view).classList.add('active');
+      currentView = btn.dataset.view;
+      renderHomeDate();
     });
   });
 
-  // 月表示の簡易カレンダー生成（ダミー）
-  const monthGrid = document.getElementById('monthGrid');
-  const daysInMonth = 30;
-  const todayDate = 27;
-  const eventDayCounts = {
-    1: 2, 2: 1, 3: 3, 4: 1, 5: 2, 8: 2, 9: 3, 10: 1, 11: 2,
-    12: 1, 15: 3, 16: 1, 17: 2, 18: 1, 19: 2, 22: 1, 23: 3,
-    24: 2, 25: 1, 26: 2, 27: 4, 28: 2, 29: 1
-  };
-  for (let d = 1; d <= daysInMonth; d++) {
-    const cell = document.createElement('div');
-    cell.className = 'month-cell' + (d === todayDate ? ' today' : '');
-    const count = eventDayCounts[d] || 0;
-    const dots = '<span></span>'.repeat(Math.min(count, 4));
-    cell.innerHTML = d + (count ? '<div class="dots">' + dots + '</div>' : '');
-    monthGrid.appendChild(cell);
-  }
+  homeDatePrev.addEventListener('click', () => {
+    if (currentView === 'week') { weekOffset--; renderWeek(); }
+    else if (currentView === 'month') { monthOffset--; renderMonth(); }
+  });
+  homeDateNext.addEventListener('click', () => {
+    if (currentView === 'week') { weekOffset++; renderWeek(); }
+    else if (currentView === 'month') { monthOffset++; renderMonth(); }
+  });
+
+  renderHomeDate();
 
   // ===== AI提案：日付指定（簡易デモ） =====
   const aiDates = [
