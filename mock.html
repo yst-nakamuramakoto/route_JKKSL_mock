@@ -717,6 +717,131 @@
     cursor: pointer;
   }
   .sound-note { font-size: 11px; color: #999; margin-top: 10px; }
+
+  /* ===== AIアシスタント チャット ===== */
+  #chat {
+    display: none;
+    flex-direction: column;
+    height: calc(100vh - 56px - 72px);
+    padding: 0;
+  }
+  #chat.active { display: flex; }
+  .chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .chat-bubble-wrap {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+  .chat-bubble-wrap.user { flex-direction: row-reverse; }
+  .chat-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+  .chat-bubble {
+    max-width: 72%;
+    padding: 10px 14px;
+    border-radius: 18px;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .chat-bubble.bot {
+    background: #eef1f5;
+    color: #222;
+    border-bottom-left-radius: 4px;
+  }
+  .chat-bubble.user {
+    background: #2E7D32;
+    color: #fff;
+    border-bottom-right-radius: 4px;
+  }
+  .chat-bubble.action-link {
+    cursor: pointer;
+    text-decoration: underline;
+    color: #2E7D32;
+    background: #f0f7f0;
+    border: 1px solid #b2dfb2;
+    font-weight: bold;
+  }
+  .chat-typing {
+    display: flex;
+    gap: 4px;
+    padding: 12px 14px;
+    background: #eef1f5;
+    border-radius: 18px;
+    border-bottom-left-radius: 4px;
+    width: fit-content;
+  }
+  .chat-typing span {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #aaa;
+    animation: bounce 1.2s infinite;
+  }
+  .chat-typing span:nth-child(2) { animation-delay: 0.2s; }
+  .chat-typing span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-6px); }
+  }
+  .chat-input-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #fff;
+    border-top: 1px solid #e8ebf0;
+  }
+  .chat-text-input {
+    flex: 1;
+    border: 1px solid #dde;
+    border-radius: 20px;
+    padding: 9px 14px;
+    font-size: 13px;
+    outline: none;
+  }
+  .chat-text-input:focus { border-color: #2E7D32; }
+  .chat-send-btn, .chat-mic-btn {
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .chat-send-btn { background: #2E7D32; color: #fff; }
+  .chat-mic-btn { background: #eef1f5; color: #2E7D32; }
+  .chat-mic-btn.recording { background: #c62828; color: #fff; animation: pulse 1s infinite; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+  }
+  .mic-fab {
+    position: fixed;
+    bottom: 90px;
+    right: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: #4CAF50;
+    color: #fff;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    z-index: 90;
+    display: none;
+  }
 </style>
 </head>
 <body>
@@ -736,6 +861,7 @@
     <button class="side-item" data-screen="route"><span class="icon">🗺️</span>ルート</button>
     <button class="side-item" data-screen="parking"><span class="icon">🅿️</span>駐車場</button>
     <button class="side-item" data-screen="visit"><span class="icon">⏰</span>滞在アラート</button>
+    <button class="side-item" data-screen="chat"><span class="icon">🎙️</span>AIアシスタント</button>
   </div>
 
   <div class="content-area">
@@ -1198,10 +1324,21 @@
         </div>
       </section>
 
+      <!-- ⑦ AIアシスタント（チャット） -->
+      <section class="screen" id="chat">
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-bar">
+          <button class="chat-mic-btn" id="chatMic" title="音声入力">🎙️</button>
+          <input class="chat-text-input" id="chatInput" type="text" placeholder="話しかけてください…">
+          <button class="chat-send-btn" id="chatSend" title="送信">➤</button>
+        </div>
+      </section>
+
     </main>
 
     <!-- 親指で完結するFAB（ホームのみ表示） -->
     <div class="fab-wrap" id="fabWrap" style="position:relative;">
+      <button class="fab-option" id="openChat">🎙️ AIと話す</button>
       <button class="fab-option" id="openAddAi">🤖 AI提案を追加</button>
       <button class="fab-option" id="openAddTask">✅ タスクを追加</button>
       <button class="fab-option" id="openAddSchedule">
@@ -1268,13 +1405,14 @@
   const screens = document.querySelectorAll('.screen');
   const topbarTitle = document.getElementById('topbarTitle');
   const fabWrap = document.getElementById('fabWrap');
-  const titles = { home: 'ホーム', ai: 'AI提案', tasks: 'タスク', route: 'ルート提案', parking: '駐車場リスト', visit: '滞在アラート' };
+  const titles = { home: 'ホーム', ai: 'AI提案', tasks: 'タスク', route: 'ルート提案', parking: '駐車場リスト', visit: '滞在アラート', chat: '🎙️ AIアシスタント' };
 
   function goToScreen(target) {
     sideItems.forEach(i => i.classList.toggle('active', i.dataset.screen === target));
     screens.forEach(s => s.classList.toggle('active', s.id === target));
     topbarTitle.textContent = titles[target];
     fabWrap.style.display = (target === 'home') ? 'flex' : 'none';
+    if (target === 'chat') initChat();
   }
 
   sideItems.forEach(item => {
@@ -1505,6 +1643,11 @@
     goToScreen('ai');
   });
 
+  document.getElementById('openChat').addEventListener('click', () => {
+    fabWrap.classList.remove('open');
+    goToScreen('chat');
+  });
+
   // ===== 空き時間からAI提案画面へ遷移 =====
   document.querySelectorAll('.goto-ai-btn').forEach(btn => {
     btn.addEventListener('click', () => goToScreen(btn.dataset.screen));
@@ -1594,6 +1737,167 @@
         osc.stop(ctx.currentTime + delay + 0.2);
       });
     } catch (e) { /* AudioContext未対応環境は無視 */ }
+  }
+
+  // ===== AIアシスタント チャット =====
+  const chatMessages = document.getElementById('chatMessages');
+  const chatInput   = document.getElementById('chatInput');
+  const chatSend    = document.getElementById('chatSend');
+  const chatMic     = document.getElementById('chatMic');
+  let chatInitialized = false;
+
+  const BOT_AVATAR = 'MuK.jpg';
+
+  // ルールベース応答テーブル
+  const BOT_RULES = [
+    {
+      test: t => /予定|スケジュール/.test(t) && /入れて|追加|登録/.test(t),
+      reply: t => {
+        const time = (t.match(/\d+時/) || [''])[0];
+        const whom = (t.match(/[A-Za-z゠-ヿ぀-ゟ一-鿿]+(?:さん|様|商事|工業|商店|産業|介護)?/g) || [])
+          .filter(w => w.length > 1 && !/追加|予定|スケジュール|入れて|登録|明日|今日|今週/.test(w))[0] || '訪問先';
+        return `承知しました！${time ? time + 'から' : ''}「${whom}」の予定をカレンダーに登録します。\n\n✅ Googleカレンダーへ追加完了（デモ）`;
+      }
+    },
+    {
+      test: t => /タスク/.test(t) && /追加|入れて|登録/.test(t),
+      reply: t => {
+        const task = (t.match(/「[^」]+」/) || [])[0] || '新しいタスク';
+        return `タスク ${task} を追加しました。\n\n✅ タスクリストへ追加完了（デモ）`;
+      }
+    },
+    {
+      test: t => /提案|おすすめ/.test(t) && /採用|受け入れ|追加|登録|お願い/.test(t),
+      reply: () => 'AI提案を採用します。カレンダーへ登録しますね。\n\n→ AI提案画面へ移動します…',
+      action: () => { setTimeout(() => goToScreen('ai'), 1500); }
+    },
+    {
+      test: t => /ルート|行きたい|どこ|回りたい|順番/.test(t),
+      reply: t => {
+        const dest = (t.match(/[A-Za-z゠-ヿ぀-ゟ一-鿿]{2,}(?:さん|様|商事|工業|商店|産業)?/) || [''])[0];
+        return `${dest ? '「' + dest + '」を含めた' : ''}最適ルートを再計算します。\n\n→ ルート提案画面へ移動します…`;
+      },
+      action: () => { setTimeout(() => goToScreen('route'), 1500); }
+    },
+    {
+      test: t => /今日|本日/.test(t) && /スケジュール|予定|どんな|教えて|確認/.test(t),
+      reply: () =>
+        '📅 本日（2026/06/27）のスケジュールです：\n\n' +
+        '08:30　事業所 → A商事 へ移動\n' +
+        '09:00　A商事 定期訪問\n' +
+        '10:15　B興産 新規商談\n' +
+        '11:15　鈴木次郎様 モニタリング訪問\n' +
+        '12:00　休憩（昼食）\n' +
+        '13:00　⏰ 空き時間（2時間）\n' +
+        '15:15　C商店 契約更新の確認\n' +
+        '16:00　社内ミーティング\n' +
+        '17:15　D社 見積りフォロー電話'
+    },
+    {
+      test: t => /空き|空き時間/.test(t) && /どこ|提案|おすすめ|行く/.test(t),
+      reply: () => '13:00〜15:00 に空き時間があります。AI提案画面で訪問候補をご確認いただけます。\n\n→ AI提案画面へ移動します…',
+      action: () => { setTimeout(() => goToScreen('ai'), 1500); }
+    }
+  ];
+
+  function addMessage(text, sender, isAction) {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-bubble-wrap ' + sender;
+    if (sender === 'bot') {
+      const avatar = document.createElement('img');
+      avatar.src = BOT_AVATAR;
+      avatar.className = 'chat-avatar';
+      avatar.alt = 'AI';
+      wrap.appendChild(avatar);
+    }
+    const bubble = document.createElement('div');
+    bubble.className = 'chat-bubble ' + sender + (isAction ? ' action-link' : '');
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+    chatMessages.appendChild(wrap);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function showTyping() {
+    const wrap = document.createElement('div');
+    wrap.className = 'chat-bubble-wrap bot';
+    wrap.id = 'chatTyping';
+    const avatar = document.createElement('img');
+    avatar.src = BOT_AVATAR;
+    avatar.className = 'chat-avatar';
+    wrap.appendChild(avatar);
+    const typing = document.createElement('div');
+    typing.className = 'chat-typing';
+    typing.innerHTML = '<span></span><span></span><span></span>';
+    wrap.appendChild(typing);
+    chatMessages.appendChild(wrap);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const t = document.getElementById('chatTyping');
+    if (t) t.remove();
+  }
+
+  function botRespond(userText) {
+    showTyping();
+    const rule = BOT_RULES.find(r => r.test(userText));
+    const replyText = rule
+      ? rule.reply(userText)
+      : 'もう少し詳しく教えてください。\n例：「明日14時にA商事の訪問を追加して」「今日の空き時間の提案を採用して」';
+    setTimeout(() => {
+      removeTyping();
+      addMessage(replyText, 'bot');
+      if (rule && rule.action) rule.action();
+    }, 900);
+  }
+
+  function sendChat() {
+    const text = chatInput.value.trim();
+    if (!text) return;
+    addMessage(text, 'user');
+    chatInput.value = '';
+    botRespond(text);
+  }
+
+  chatSend.addEventListener('click', sendChat);
+  chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
+
+  // 音声入力（Web Speech API）
+  let recognition = null;
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    recognition = new SR();
+    recognition.lang = 'ja-JP';
+    recognition.interimResults = false;
+    recognition.onresult = e => {
+      chatInput.value = e.results[0][0].transcript;
+      chatMic.classList.remove('recording');
+      sendChat();
+    };
+    recognition.onerror = () => chatMic.classList.remove('recording');
+    recognition.onend   = () => chatMic.classList.remove('recording');
+    chatMic.addEventListener('click', () => {
+      if (chatMic.classList.contains('recording')) {
+        recognition.stop();
+        chatMic.classList.remove('recording');
+      } else {
+        recognition.start();
+        chatMic.classList.add('recording');
+      }
+    });
+  } else {
+    chatMic.title = 'このブラウザは音声入力に対応していません（Chrome推奨）';
+    chatMic.style.opacity = '0.4';
+    chatMic.style.cursor = 'not-allowed';
+  }
+
+  function initChat() {
+    if (chatInitialized) return;
+    chatInitialized = true;
+    setTimeout(() => {
+      addMessage('こんにちは！AIアシスタントです🌿\n\n音声またはテキストで話しかけてください。\n\n例：\n「今日のスケジュールを教えて」\n「明日14時にA商事の訪問を追加して」\n「13時の空き時間の提案を採用して」\n「山田さんのところに行きたい」', 'bot');
+    }, 300);
   }
 </script>
 
