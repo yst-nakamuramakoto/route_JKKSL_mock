@@ -405,6 +405,155 @@
   .label-filter-btn.事務処理          { background: #f3f3f3; color: #555;    }
   .label-filter-btn.active            { border-color: currentColor; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
 
+  /* ===== カレンダーピッカー ===== */
+  .cal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.45);
+    z-index: 300;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  .cal-overlay.active { display: flex; }
+  .cal-sheet {
+    background: #fff;
+    border-radius: 20px 20px 0 0;
+    padding: 20px 16px 36px;
+    width: 100%;
+    max-width: 860px;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+  }
+  .cal-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+  .cal-mode-label {
+    font-size: 13px;
+    color: #2E7D32;
+    font-weight: bold;
+    letter-spacing: 0.03em;
+  }
+  .cal-close-x {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #aaa;
+    cursor: pointer;
+    padding: 4px 8px;
+    line-height: 1;
+  }
+  .cal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .cal-month-label { font-size: 17px; font-weight: bold; color: #222; }
+  .cal-nav-btn {
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    border: none;
+    background: #eef1f5;
+    font-size: 20px;
+    cursor: pointer;
+    color: #2E7D32;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-dow-row {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    text-align: center;
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 4px;
+  }
+  .cal-dow-row span:first-child { color: #e53935; }
+  .cal-dow-row span:last-child  { color: #1565c0; }
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 3px;
+  }
+  .cal-cell {
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #333;
+    position: relative;
+  }
+  .cal-cell.empty { pointer-events: none; }
+  .cal-cell.dow-sun { color: #e53935; }
+  .cal-cell.dow-sat { color: #1565c0; }
+  .cal-cell.today {
+    outline: 2px solid #2E7D32;
+    outline-offset: -2px;
+  }
+  .cal-cell.selected-start,
+  .cal-cell.selected-end {
+    background: #2E7D32 !important;
+    color: #fff !important;
+    border-radius: 50%;
+  }
+  .cal-cell.in-range {
+    background: #e8f5e9;
+    border-radius: 0;
+    color: #1b5e20;
+  }
+  .cal-cell.range-left  { border-radius: 50% 0 0 50%; }
+  .cal-cell.range-right { border-radius: 0 50% 50% 0; }
+  .cal-cell:not(.empty):not(.selected-start):not(.selected-end):hover {
+    background: #f0f0f0;
+    border-radius: 50%;
+  }
+  .cal-cell.in-range:hover { border-radius: 0; }
+  .cal-footer {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .cal-clear-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #f3f3f3;
+    color: #888;
+    font-size: 14px;
+    cursor: pointer;
+    min-height: 44px;
+  }
+  /* 日付トリガーボタン */
+  .date-trigger {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #ddd;
+    border-radius: 10px;
+    background: #fafafa;
+    font-size: 14px;
+    color: #aaa;
+    text-align: left;
+    cursor: pointer;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: border-color 0.15s;
+  }
+  .date-trigger.has-value {
+    color: #1b5e20;
+    font-weight: bold;
+    border-color: #2E7D32;
+    background: #f1f8f2;
+  }
+  .date-trigger::before { content: '📅'; font-size: 16px; }
+
   /* ===== FAB（親指操作） ===== */
   .fab-wrap {
     position: absolute;
@@ -1655,8 +1804,14 @@
     <h3>予定を追加（Googleカレンダーに登録）</h3>
     <label>タイトル</label>
     <input type="text" placeholder="例：E物産 新規訪問">
-    <label>日時</label>
-    <input type="text" placeholder="例：14:00 - 14:30">
+    <label>日付</label>
+    <button class="date-trigger" id="scheduleDateTrigger">日付を選択</button>
+    <label>時間帯</label>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="text" id="scheduleTimeStart" placeholder="14:00" style="flex:1;padding:11px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;min-height:44px;">
+      <span style="color:#aaa;font-size:13px;">〜</span>
+      <input type="text" id="scheduleTimeEnd" placeholder="14:30" style="flex:1;padding:11px 12px;border:1.5px solid #ddd;border-radius:10px;font-size:14px;min-height:44px;">
+    </div>
     <label>場所</label>
     <input type="text" placeholder="例：東京都〇〇区...">
     <div class="modal-actions">
@@ -1673,9 +1828,9 @@
     <label>内容</label>
     <input type="text" id="taskInputName" placeholder="例：F社 見積フォロー">
     <label>開始日</label>
-    <input type="date" id="taskInputStart">
+    <button class="date-trigger" id="taskStartTrigger">開始日を選択</button>
     <label>終了日（期限）</label>
-    <input type="date" id="taskInputEnd">
+    <button class="date-trigger" id="taskEndTrigger">終了日を選択</button>
     <label>ラベル</label>
     <div class="task-label-select" id="taskLabelSelect">
       <button class="task-label-opt" data-label="利用者">利用者</button>
@@ -1686,6 +1841,28 @@
     <div class="modal-actions">
       <button class="btn accept" id="submitTask">追加する</button>
       <button class="btn reject" id="closeAddTask">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- カレンダーピッカー（共有・下からシート） -->
+<div class="cal-overlay" id="calPicker">
+  <div class="cal-sheet">
+    <div class="cal-title-row">
+      <span class="cal-mode-label" id="calModeLabel">日付を選択</span>
+      <button class="cal-close-x" id="calCloseX">✕</button>
+    </div>
+    <div class="cal-header">
+      <button class="cal-nav-btn" id="calPrevMonth">‹</button>
+      <span class="cal-month-label" id="calMonthLabel">2026年6月</span>
+      <button class="cal-nav-btn" id="calNextMonth">›</button>
+    </div>
+    <div class="cal-dow-row">
+      <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+    </div>
+    <div class="cal-grid" id="calGrid"></div>
+    <div class="cal-footer">
+      <button class="cal-clear-btn" id="calClearBtn">クリア</button>
     </div>
   </div>
 </div>
@@ -2038,6 +2215,137 @@
   });
   // ===== タスク追加モーダル：ラベル選択 =====
   let selectedTaskLabel = '';
+  let taskStartDate = null, taskEndDate = null, scheduleDate = null;
+  let calMode = '';
+  const CAL_TODAY = new Date(2026, 5, 27);
+
+  function pad2(n) { return String(n).padStart(2, '0'); }
+  function fmtDateSlash(d) { return d.getFullYear() + '/' + pad2(d.getMonth()+1) + '/' + pad2(d.getDate()); }
+  function sameDay(a, b) { return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+  function renderCal() {
+    const firstDay = new Date(calYear, calMonth, 1);
+    const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+    // JS 0=Sun → 変換: Sun=0, Mon=1...Sat=6 → ここでは日曜始まり表示
+    const startDow = firstDay.getDay(); // 0=Sun
+
+    document.getElementById('calMonthLabel').textContent = calYear + '年' + (calMonth + 1) + '月';
+    const grid = document.getElementById('calGrid');
+    grid.innerHTML = '';
+
+    for (let i = 0; i < startDow; i++) {
+      const empty = document.createElement('div');
+      empty.className = 'cal-cell empty';
+      grid.appendChild(empty);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(calYear, calMonth, d);
+      const dow = date.getDay();
+      const cell = document.createElement('div');
+      let cls = 'cal-cell';
+      if (dow === 0) cls += ' dow-sun';
+      if (dow === 6) cls += ' dow-sat';
+      if (sameDay(date, CAL_TODAY)) cls += ' today';
+
+      const isStart = sameDay(date, taskStartDate) || (calMode === 'schedule' && sameDay(date, scheduleDate));
+      const isEnd   = sameDay(date, taskEndDate);
+      const inRange = taskStartDate && taskEndDate && date > taskStartDate && date < taskEndDate;
+
+      if (isStart) cls += ' selected-start';
+      if (isEnd)   cls += ' selected-end';
+      if (inRange) {
+        cls += ' in-range';
+        const dayBefore = new Date(calYear, calMonth, d - 1);
+        const dayAfter  = new Date(calYear, calMonth, d + 1);
+        if (sameDay(dayBefore, taskStartDate)) cls += ' range-left';
+        if (sameDay(dayAfter,  taskEndDate))   cls += ' range-right';
+      }
+
+      cell.className = cls;
+      cell.textContent = d;
+      cell.addEventListener('click', () => selectCalDate(new Date(calYear, calMonth, d)));
+      grid.appendChild(cell);
+    }
+  }
+
+  let calYear = CAL_TODAY.getFullYear();
+  let calMonth = CAL_TODAY.getMonth();
+
+  function openCal(mode) {
+    calMode = mode;
+    const cur = mode === 'start' ? taskStartDate : mode === 'end' ? taskEndDate : scheduleDate;
+    calYear  = cur ? cur.getFullYear() : CAL_TODAY.getFullYear();
+    calMonth = cur ? cur.getMonth()    : CAL_TODAY.getMonth();
+    const labels = { start: '開始日を選択', end: '終了日（期限）を選択', schedule: '予定日を選択' };
+    document.getElementById('calModeLabel').textContent = labels[mode];
+    renderCal();
+    document.getElementById('calPicker').classList.add('active');
+  }
+
+  function selectCalDate(date) {
+    if (calMode === 'start') {
+      taskStartDate = date;
+      if (taskEndDate && taskEndDate < taskStartDate) taskEndDate = null;
+      const t = document.getElementById('taskStartTrigger');
+      t.textContent = fmtDateSlash(date); t.classList.add('has-value');
+      document.getElementById('calPicker').classList.remove('active');
+      if (!taskEndDate) setTimeout(() => openCal('end'), 250);
+    } else if (calMode === 'end') {
+      if (taskStartDate && date < taskStartDate) {
+        taskEndDate = taskStartDate;
+        taskStartDate = date;
+        const ts = document.getElementById('taskStartTrigger');
+        ts.textContent = fmtDateSlash(taskStartDate); ts.classList.add('has-value');
+      } else {
+        taskEndDate = date;
+      }
+      const te = document.getElementById('taskEndTrigger');
+      te.textContent = fmtDateSlash(taskEndDate); te.classList.add('has-value');
+      document.getElementById('calPicker').classList.remove('active');
+    } else if (calMode === 'schedule') {
+      scheduleDate = date;
+      const ts = document.getElementById('scheduleDateTrigger');
+      ts.textContent = fmtDateSlash(date); ts.classList.add('has-value');
+      document.getElementById('calPicker').classList.remove('active');
+    }
+    renderCal();
+  }
+
+  document.getElementById('calPrevMonth').addEventListener('click', () => {
+    calMonth--; if (calMonth < 0) { calMonth = 11; calYear--; } renderCal();
+  });
+  document.getElementById('calNextMonth').addEventListener('click', () => {
+    calMonth++; if (calMonth > 11) { calMonth = 0; calYear++; } renderCal();
+  });
+  document.getElementById('calCloseX').addEventListener('click', () => {
+    document.getElementById('calPicker').classList.remove('active');
+  });
+  document.getElementById('calClearBtn').addEventListener('click', () => {
+    if (calMode === 'start') {
+      taskStartDate = null;
+      const t = document.getElementById('taskStartTrigger');
+      t.textContent = '開始日を選択'; t.classList.remove('has-value');
+    } else if (calMode === 'end') {
+      taskEndDate = null;
+      const t = document.getElementById('taskEndTrigger');
+      t.textContent = '終了日を選択'; t.classList.remove('has-value');
+    } else if (calMode === 'schedule') {
+      scheduleDate = null;
+      const t = document.getElementById('scheduleDateTrigger');
+      t.textContent = '日付を選択'; t.classList.remove('has-value');
+    }
+    document.getElementById('calPicker').classList.remove('active');
+  });
+  document.getElementById('calPicker').addEventListener('click', e => {
+    if (e.target === document.getElementById('calPicker')) {
+      document.getElementById('calPicker').classList.remove('active');
+    }
+  });
+  document.getElementById('taskStartTrigger').addEventListener('click', () => openCal('start'));
+  document.getElementById('taskEndTrigger').addEventListener('click', () => openCal('end'));
+  document.getElementById('scheduleDateTrigger').addEventListener('click', () => openCal('schedule'));
+
   document.querySelectorAll('.task-label-opt').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.task-label-opt').forEach(b => b.classList.remove('selected'));
@@ -2047,15 +2355,16 @@
   });
 
   document.getElementById('submitTask').addEventListener('click', () => {
-    const name  = document.getElementById('taskInputName').value.trim();
-    const start = document.getElementById('taskInputStart').value;
-    const end   = document.getElementById('taskInputEnd').value;
+    const name = document.getElementById('taskInputName').value.trim();
     if (!name) { alert('内容を入力してください'); return; }
     if (!selectedTaskLabel) { alert('ラベルを選択してください'); return; }
 
-    // タスクリストに動的追加
-    const fmtDate = v => v ? v.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3') : '？';
-    const dueText = (start && end) ? fmtDate(start) + '〜' + fmtDate(end) : (end ? '期限：' + fmtDate(end) : '期限：未設定');
+    const fmtShort = d => pad2(d.getMonth()+1) + '/' + pad2(d.getDate());
+    const dueText = (taskStartDate && taskEndDate)
+      ? fmtShort(taskStartDate) + '〜' + fmtShort(taskEndDate)
+      : taskEndDate ? '期限：' + fmtShort(taskEndDate)
+      : taskStartDate ? '開始：' + fmtShort(taskStartDate)
+      : '期限：未設定';
 
     const item = document.createElement('div');
     item.className = 'task-item';
@@ -2088,8 +2397,11 @@
 
     // モーダルをリセットして閉じる
     document.getElementById('taskInputName').value = '';
-    document.getElementById('taskInputStart').value = '';
-    document.getElementById('taskInputEnd').value = '';
+    taskStartDate = null; taskEndDate = null;
+    const ts = document.getElementById('taskStartTrigger');
+    ts.textContent = '開始日を選択'; ts.classList.remove('has-value');
+    const te = document.getElementById('taskEndTrigger');
+    te.textContent = '終了日を選択'; te.classList.remove('has-value');
     document.querySelectorAll('.task-label-opt').forEach(b => b.classList.remove('selected'));
     selectedTaskLabel = '';
     document.getElementById('addTaskModal').classList.remove('active');
