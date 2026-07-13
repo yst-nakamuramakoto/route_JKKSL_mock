@@ -2242,7 +2242,6 @@
   let calMode = '';
   const CAL_TODAY = new Date(2026, 5, 27);
 
-  function pad2(n) { return String(n).padStart(2, '0'); }
   function fmtDateSlash(d) { return d.getFullYear() + '/' + pad2(d.getMonth()+1) + '/' + pad2(d.getDate()); }
   function sameDay(a, b) { return a && b && a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
 
