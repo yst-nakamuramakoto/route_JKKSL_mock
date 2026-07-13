@@ -21,16 +21,32 @@
     margin: 0 auto;
     background: #fff;
     box-shadow: 0 0 12px rgba(0,0,0,0.08);
+    position: relative;
+    overflow: hidden;
   }
+  .sidebar-overlay {
+    display: none;
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.35);
+    z-index: 99;
+  }
+  .app-shell.sidebar-open .sidebar-overlay { display: block; }
   .sidebar {
-    width: 84px;
-    flex-shrink: 0;
+    position: absolute;
+    top: 0; left: 0; bottom: 0;
+    width: 100px;
+    z-index: 100;
     background: #2E7D32;
     color: #d7ead7;
     display: flex;
     flex-direction: column;
     padding: 14px 0;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: 3px 0 16px rgba(0,0,0,0.18);
   }
+  .app-shell.sidebar-open .sidebar { transform: translateX(0); }
   .sidebar .brand {
     text-align: center;
     color: #fff;
@@ -90,10 +106,26 @@
   .topbar {
     background: #2E7D32;
     color: #fff;
-    padding: 14px 20px;
+    padding: 0 16px;
     font-size: 16px;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    height: 52px;
+    flex-shrink: 0;
   }
+  .menu-btn {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+    padding: 4px 6px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  #topbarTitle { flex: 1; }
   main {
     flex: 1;
     overflow-y: auto;
@@ -319,7 +351,12 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 10px;
+    z-index: 80;
+    touch-action: none;
+    user-select: none;
   }
+  .fab-main { cursor: grab; }
+  .fab-main:active { cursor: grabbing; }
   .fab-option {
     display: none;
     align-items: center;
@@ -718,6 +755,82 @@
   }
   .sound-note { font-size: 11px; color: #999; margin-top: 10px; }
 
+  /* ===== ガントチャート ===== */
+  .gantt-btn {
+    background: #2E7D32;
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  .gantt-back-btn {
+    background: #eef1f5;
+    color: #2E7D32;
+    border: none;
+    border-radius: 8px;
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    margin-bottom: 14px;
+  }
+  .gantt-scroll { overflow-x: auto; }
+  .gantt-table { border-collapse: collapse; min-width: 100%; font-size: 12px; }
+  .gantt-table th, .gantt-table td { padding: 4px 6px; border: none; }
+  .gantt-table thead th {
+    background: #f5f7fa;
+    color: #888;
+    text-align: center;
+    font-weight: normal;
+    border-bottom: 1px solid #e0e4ea;
+    white-space: nowrap;
+    min-width: 28px;
+  }
+  .gantt-table thead th.today-col { color: #2E7D32; font-weight: bold; }
+  .gantt-row-label {
+    font-size: 12px;
+    color: #333;
+    white-space: nowrap;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 10px;
+  }
+  .gantt-row-label.done { color: #aaa; text-decoration: line-through; }
+  .gantt-cell { position: relative; height: 22px; }
+  .gantt-bar {
+    position: absolute;
+    top: 3px; bottom: 3px;
+    border-radius: 4px;
+    background: #4CAF50;
+    left: 0; right: 0;
+  }
+  .gantt-bar.done { background: #bdbdbd; }
+  .gantt-today-line {
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 2px;
+    background: #2E7D32;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+
+  /* ===== 着信風アラート ===== */
+  .alert-phone {
+    font-size: 48px;
+    animation: ring 0.4s infinite alternate;
+    display: inline-block;
+  }
+  @keyframes ring {
+    from { transform: rotate(-15deg); }
+    to   { transform: rotate(15deg); }
+  }
+  .alert-caller { font-size: 18px; font-weight: bold; color: #fff; margin: 8px 0 4px; }
+  .alert-sub    { font-size: 13px; color: rgba(255,255,255,0.8); margin-bottom: 20px; }
+
   /* ===== AIアシスタント チャット ===== */
   #chat {
     display: none;
@@ -848,24 +961,28 @@
 
 <div class="app-shell">
 
-  <!-- 左サイドメニュー -->
-  <div class="sidebar">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+  <!-- 左サイドメニュー（ドロワー） -->
+  <div class="sidebar" id="sidebar">
     <div class="brand">
       <img src="MuK.jpg" class="brand-mascot" alt="MUSUBOなびゲート">
       <div class="brand-name">MUSUBO<br>なびゲート</div>
       <div class="brand-tagline">routesupport</div>
     </div>
     <button class="side-item active" data-screen="home"><span class="icon">🏠</span>ホーム</button>
-    <button class="side-item" data-screen="ai"><span class="icon">🤖</span>AI提案</button>
     <button class="side-item" data-screen="tasks"><span class="icon">✅</span>タスク</button>
     <button class="side-item" data-screen="route"><span class="icon">🗺️</span>ルート</button>
     <button class="side-item" data-screen="parking"><span class="icon">🅿️</span>駐車場</button>
-    <button class="side-item" data-screen="visit"><span class="icon">⏰</span>滞在アラート</button>
-    <button class="side-item" data-screen="chat"><span class="icon">🎙️</span>AIアシスタント</button>
+    <button class="side-item" data-screen="ai"><span class="icon">🤖</span>AI提案</button>
+    <button class="side-item" data-screen="visit"><span class="icon">⏰</span>アラート</button>
   </div>
 
   <div class="content-area">
-    <div class="topbar" id="topbarTitle">ホーム</div>
+    <div class="topbar">
+      <button class="menu-btn" id="menuBtn">☰</button>
+      <span id="topbarTitle">ホーム</span>
+    </div>
 
     <main>
 
@@ -1121,50 +1238,60 @@
 
       <!-- タスク（一覧） -->
       <section class="screen" id="tasks">
-        <div class="home-header">
-          <div class="section-title">すべてのタスク</div>
+        <div class="home-header" style="margin-bottom:12px;">
+          <div class="section-title" style="margin:0;">すべてのタスク</div>
+          <button class="gantt-btn" id="showGanttBtn">📊 ガントチャート</button>
         </div>
         <div class="task-item">
           <input type="checkbox">
           <div class="task-name">B工業 見積書を送付する</div>
-          <div class="task-due">期限：今日</div>
+          <div class="task-due">6/27〜6/27</div>
           <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
         </div>
         <div class="task-item">
           <input type="checkbox">
           <div class="task-name">鈴木次郎様 ご家族へ訪問報告の連絡</div>
-          <div class="task-due">期限：今日</div>
+          <div class="task-due">6/27〜6/27</div>
           <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
         </div>
         <div class="task-item">
           <input type="checkbox">
           <div class="task-name">C商店 先週の訪問フォロー電話</div>
-          <div class="task-due">期限：明日</div>
+          <div class="task-due">6/27〜6/28</div>
           <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
         </div>
         <div class="task-item">
           <input type="checkbox">
           <div class="task-name">B興産 見積り条件のすり合わせメール</div>
-          <div class="task-due">期限：明日</div>
+          <div class="task-due">6/28〜6/29</div>
           <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
         </div>
         <div class="task-item">
           <input type="checkbox">
           <div class="task-name">田中花子様 ケアマネへの状況共有</div>
-          <div class="task-due">期限：6月30日</div>
+          <div class="task-due">6/27〜6/30</div>
           <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
         </div>
         <div class="task-item done">
           <input type="checkbox" checked>
           <div class="task-name">D社 契約更新書類の準備</div>
-          <div class="task-due">完了済み</div>
+          <div class="task-due">6/24〜6/26（完了）</div>
           <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
         </div>
         <div class="task-item done">
           <input type="checkbox" checked>
           <div class="task-name">山田太郎様 福祉用具の動作確認結果を記録</div>
-          <div class="task-due">完了済み</div>
+          <div class="task-due">6/25〜6/25（完了）</div>
           <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+        </div>
+      </section>
+
+      <!-- ガントチャート画面 -->
+      <section class="screen" id="gantt">
+        <button class="gantt-back-btn" id="ganttBackBtn">← タスク一覧に戻る</button>
+        <div class="section-title">タスク ガントチャート</div>
+        <div class="gantt-scroll">
+          <table class="gantt-table" id="ganttTable"></table>
         </div>
       </section>
 
@@ -1387,15 +1514,16 @@
 
 <!-- 強制ポップアップ通知（滞在アラート本番イメージ） -->
 <div class="alert-popup-overlay" id="alertPopup">
-  <div class="alert-popup-box">
-    <div class="alert-mascot-row">
-      <img src="MuK.jpg" class="mascot-img mascot-img-lg" alt="" aria-hidden="true">
+  <div class="alert-popup-box" style="background:linear-gradient(160deg,#1b5e20,#2E7D32);border-radius:28px;padding:32px 24px;">
+    <div class="alert-phone">📞</div>
+    <div class="alert-caller">着信中…</div>
+    <div class="alert-sub">「退出時間です」（株式会社サンプル商事）</div>
+    <div style="display:flex;gap:24px;justify-content:center;margin-top:8px;">
+      <button id="closeAlertPopup" style="width:64px;height:64px;border-radius:50%;background:#c0392b;border:none;color:#fff;font-size:26px;cursor:pointer;">📵</button>
+      <button onclick="document.getElementById('alertPopup').classList.remove('active')" style="width:64px;height:64px;border-radius:50%;background:#388e3c;border:3px solid #8BC34A;color:#fff;font-size:26px;cursor:pointer;">✅</button>
     </div>
-    <div class="big-icon">⏰</div>
-    <h2>退出時間です！</h2>
-    <p>株式会社サンプル商事での滞在予定時間が終了しました。次の訪問先への移動を開始してください。</p>
-    <button id="closeAlertPopup">確認した</button>
-    <div class="sound-note">※本番では画面の強制表示と同時に通知音・端末バイブレーションも作動します</div>
+    <div style="font-size:11px;color:rgba(255,255,255,0.65);margin-top:16px;">左：応答して退出 ／ 右：確認して続行</div>
+    <div class="sound-note" style="color:rgba(255,255,255,0.5);margin-top:10px;">※着信音・バイブレーションが作動します</div>
   </div>
 </div>
 
@@ -1405,12 +1533,22 @@
   const screens = document.querySelectorAll('.screen');
   const topbarTitle = document.getElementById('topbarTitle');
   const fabWrap = document.getElementById('fabWrap');
-  const titles = { home: 'ホーム', ai: 'AI提案', tasks: 'タスク', route: 'ルート提案', parking: '駐車場リスト', visit: '滞在アラート', chat: '🎙️ AIアシスタント' };
+  const titles = { home: 'ホーム', ai: 'AI提案', tasks: 'タスク', route: 'ルート提案', parking: '駐車場リスト', visit: '滞在アラート', chat: '🎙️ AIアシスタント', gantt: 'ガントチャート' };
+
+  // ===== ハンバーガーメニュー =====
+  const appShell = document.querySelector('.app-shell');
+  document.getElementById('menuBtn').addEventListener('click', () => {
+    appShell.classList.toggle('sidebar-open');
+  });
+  document.getElementById('sidebarOverlay').addEventListener('click', () => {
+    appShell.classList.remove('sidebar-open');
+  });
 
   function goToScreen(target) {
     sideItems.forEach(i => i.classList.toggle('active', i.dataset.screen === target));
     screens.forEach(s => s.classList.toggle('active', s.id === target));
-    topbarTitle.textContent = titles[target];
+    topbarTitle.textContent = titles[target] || target;
+    appShell.classList.remove('sidebar-open');
     fabWrap.style.display = (target === 'home') ? 'flex' : 'none';
     if (target === 'chat') initChat();
   }
@@ -1619,11 +1757,40 @@
     aiMonthGrid.appendChild(cell);
   }
 
-  // ===== FAB（親指操作） =====
+  // ===== FAB ドラッグ移動 =====
   const fabMain = document.getElementById('fabMain');
-  fabMain.addEventListener('click', () => {
-    fabWrap.classList.toggle('open');
-  });
+  let isDragging = false, dragStartX, dragStartY, fabStartRight, fabStartBottom;
+
+  function getFabContainer() { return fabWrap.parentElement; }
+
+  function onDragStart(cx, cy) {
+    isDragging = false;
+    dragStartX = cx; dragStartY = cy;
+    const rect = getFabContainer().getBoundingClientRect();
+    const fabRect = fabWrap.getBoundingClientRect();
+    fabStartRight  = rect.right  - fabRect.right;
+    fabStartBottom = rect.bottom - fabRect.bottom;
+  }
+  function onDragMove(cx, cy) {
+    if (Math.abs(cx - dragStartX) < 4 && Math.abs(cy - dragStartY) < 4) return;
+    isDragging = true;
+    fabWrap.classList.remove('open');
+    const rect = getFabContainer().getBoundingClientRect();
+    const newRight  = Math.max(4, Math.min(rect.width  - 70, fabStartRight  + (dragStartX - cx)));
+    const newBottom = Math.max(4, Math.min(rect.height - 70, fabStartBottom + (dragStartY - cy)));
+    fabWrap.style.right  = newRight  + 'px';
+    fabWrap.style.bottom = newBottom + 'px';
+  }
+  function onDragEnd() {
+    if (!isDragging) fabWrap.classList.toggle('open');
+    isDragging = false;
+  }
+  fabMain.addEventListener('mousedown',  e => { e.preventDefault(); onDragStart(e.clientX, e.clientY); });
+  document.addEventListener('mousemove', e => { if (dragStartX !== undefined && !isDragging || isDragging) onDragMove(e.clientX, e.clientY); });
+  document.addEventListener('mouseup',   () => { if (dragStartX !== undefined) { onDragEnd(); dragStartX = undefined; } });
+  fabMain.addEventListener('touchstart', e => { const t = e.touches[0]; onDragStart(t.clientX, t.clientY); }, {passive:true});
+  fabMain.addEventListener('touchmove',  e => { const t = e.touches[0]; onDragMove(t.clientX, t.clientY); }, {passive:true});
+  fabMain.addEventListener('touchend',   () => onDragEnd());
 
   // ===== モーダル開閉 =====
   function bindModal(openId, closeId, overlayId) {
@@ -1717,26 +1884,108 @@
   document.getElementById('testAlertBtn').addEventListener('click', () => {
     alertPopup.classList.add('active');
     playAlertSound();
-    if (navigator.vibrate) navigator.vibrate([300, 100, 300]);
+    if (navigator.vibrate) navigator.vibrate([500, 200, 500, 200, 500, 200, 500]);
   });
   document.getElementById('closeAlertPopup').addEventListener('click', () => {
     alertPopup.classList.remove('active');
   });
 
+  // ===== ガントチャート =====
+  const GANTT_TASKS = [
+    { name: 'B工業 見積書を送付する',         start: new Date(2026,5,27), end: new Date(2026,5,27), done: false },
+    { name: '鈴木次郎様 ご家族へ訪問報告の連絡', start: new Date(2026,5,27), end: new Date(2026,5,27), done: false },
+    { name: 'C商店 先週の訪問フォロー電話',     start: new Date(2026,5,27), end: new Date(2026,5,28), done: false },
+    { name: 'B興産 見積り条件のすり合わせメール', start: new Date(2026,5,28), end: new Date(2026,5,29), done: false },
+    { name: '田中花子様 ケアマネへの状況共有',   start: new Date(2026,5,27), end: new Date(2026,5,30), done: false },
+    { name: 'D社 契約更新書類の準備',           start: new Date(2026,5,24), end: new Date(2026,5,26), done: true  },
+    { name: '山田太郎様 動作確認結果を記録',     start: new Date(2026,5,25), end: new Date(2026,5,25), done: true  },
+  ];
+  function buildGantt() {
+    const SPAN = 14;
+    const base = new Date(2026,5,23); // 月曜から2週間
+    const todayD = new Date(2026,5,27);
+    const table = document.getElementById('ganttTable');
+    table.innerHTML = '';
+    // ヘッダー
+    let thead = '<thead><tr><th style="text-align:left;padding-right:6px;">タスク</th>';
+    for (let i = 0; i < SPAN; i++) {
+      const d = new Date(base); d.setDate(d.getDate() + i);
+      const isTod = d.getTime() === todayD.getTime();
+      const label = (d.getMonth()+1) + '/' + d.getDate();
+      thead += `<th class="${isTod ? 'today-col' : ''}">${label}</th>`;
+    }
+    thead += '</tr></thead>';
+    table.innerHTML = thead;
+    // 各タスク行
+    const tbody = document.createElement('tbody');
+    GANTT_TASKS.forEach(task => {
+      const tr = document.createElement('tr');
+      const labelTd = document.createElement('td');
+      labelTd.className = 'gantt-row-label' + (task.done ? ' done' : '');
+      labelTd.textContent = task.name;
+      tr.appendChild(labelTd);
+      for (let i = 0; i < SPAN; i++) {
+        const d = new Date(base); d.setDate(d.getDate() + i);
+        const td = document.createElement('td');
+        td.className = 'gantt-cell';
+        td.style.position = 'relative';
+        if (d >= task.start && d <= task.end) {
+          const bar = document.createElement('div');
+          bar.className = 'gantt-bar' + (task.done ? ' done' : '');
+          // 開始セルは丸角左、終了セルは丸角右
+          if (d.getTime() === task.start.getTime()) bar.style.borderTopLeftRadius = bar.style.borderBottomLeftRadius = '6px';
+          else { bar.style.borderTopLeftRadius = bar.style.borderBottomLeftRadius = '0'; bar.style.left = '0'; }
+          if (d.getTime() === task.end.getTime()) bar.style.borderTopRightRadius = bar.style.borderBottomRightRadius = '6px';
+          else { bar.style.borderTopRightRadius = bar.style.borderBottomRightRadius = '0'; bar.style.right = '0'; }
+          td.appendChild(bar);
+        }
+        if (d.getTime() === todayD.getTime()) {
+          const line = document.createElement('div');
+          line.className = 'gantt-today-line';
+          line.style.left = '50%';
+          td.appendChild(line);
+        }
+        tr.appendChild(td);
+      }
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+  }
+  document.getElementById('showGanttBtn').addEventListener('click', () => {
+    buildGantt();
+    goToScreen('gantt');
+  });
+  document.getElementById('ganttBackBtn').addEventListener('click', () => {
+    goToScreen('tasks');
+  });
+
+  // ===== 着信風アラート音 =====
   function playAlertSound() {
     try {
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      [0, 0.3, 0.6].forEach(delay => {
+      // 着信リング：2回鳴らして0.5秒休む、を2セット
+      const pattern = [
+        {f:880, s:0,    d:0.15},
+        {f:660, s:0.15, d:0.15},
+        {f:880, s:0.35, d:0.15},
+        {f:660, s:0.5,  d:0.15},
+        {f:880, s:1.1,  d:0.15},
+        {f:660, s:1.25, d:0.15},
+        {f:880, s:1.45, d:0.15},
+        {f:660, s:1.6,  d:0.15},
+      ];
+      pattern.forEach(({f, s, d}) => {
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.value = 880;
-        gain.gain.value = 0.2;
+        osc.type = 'sine';
+        osc.frequency.value = f;
+        gain.gain.setValueAtTime(0.25, ctx.currentTime + s);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + s + d);
         osc.connect(gain).connect(ctx.destination);
-        osc.start(ctx.currentTime + delay);
-        osc.stop(ctx.currentTime + delay + 0.2);
+        osc.start(ctx.currentTime + s);
+        osc.stop(ctx.currentTime + s + d + 0.05);
       });
-    } catch (e) { /* AudioContext未対応環境は無視 */ }
+    } catch (e) { /* 未対応環境は無視 */ }
   }
 
   // ===== AIアシスタント チャット =====
