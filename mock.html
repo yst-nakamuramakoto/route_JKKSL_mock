@@ -405,24 +405,47 @@
   .label-filter-btn.事務処理          { background: #f3f3f3; color: #555;    }
   .label-filter-btn.active            { border-color: currentColor; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
 
-  /* ===== カレンダーピッカー ===== */
+  /* ===== カレンダーピッカー（吹き出しポップオーバー） ===== */
   .cal-overlay {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.45);
     z-index: 300;
-    align-items: flex-end;
-    justify-content: center;
+    /* 背景は透明。シート外タップで閉じる用 */
   }
-  .cal-overlay.active { display: flex; }
+  .cal-overlay.active { display: block; }
   .cal-sheet {
+    position: fixed; /* JS で top/left をセット */
     background: #fff;
-    border-radius: 20px 20px 0 0;
-    padding: 20px 16px 36px;
-    width: 100%;
-    max-width: 860px;
-    box-shadow: 0 -4px 24px rgba(0,0,0,0.15);
+    border-radius: 16px;
+    padding: 14px 14px 18px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.22), 0 0 0 1px rgba(0,0,0,0.07);
+    z-index: 301;
+    /* 矢印（吹き出し） */
+  }
+  /* 下向き矢印（カレンダーがボタンの下に出るとき） */
+  .cal-sheet.arrow-up::before {
+    content: '';
+    position: absolute;
+    top: -10px;
+    left: var(--arrow-x, 28px);
+    width: 0; height: 0;
+    border: 10px solid transparent;
+    border-top: none;
+    border-bottom-color: #fff;
+    filter: drop-shadow(0 -3px 2px rgba(0,0,0,0.08));
+  }
+  /* 上向き矢印（カレンダーがボタンの上に出るとき） */
+  .cal-sheet.arrow-down::before {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: var(--arrow-x, 28px);
+    width: 0; height: 0;
+    border: 10px solid transparent;
+    border-bottom: none;
+    border-top-color: #fff;
+    filter: drop-shadow(0 3px 2px rgba(0,0,0,0.08));
   }
   .cal-title-row {
     display: flex;
@@ -2272,7 +2295,7 @@
   let calYear = CAL_TODAY.getFullYear();
   let calMonth = CAL_TODAY.getMonth();
 
-  function openCal(mode) {
+  function openCal(mode, triggerEl) {
     calMode = mode;
     const cur = mode === 'start' ? taskStartDate : mode === 'end' ? taskEndDate : scheduleDate;
     calYear  = cur ? cur.getFullYear() : CAL_TODAY.getFullYear();
@@ -2280,7 +2303,57 @@
     const labels = { start: '開始日を選択', end: '終了日（期限）を選択', schedule: '予定日を選択' };
     document.getElementById('calModeLabel').textContent = labels[mode];
     renderCal();
-    document.getElementById('calPicker').classList.add('active');
+
+    // ===== 吹き出し位置計算 =====
+    const overlay = document.getElementById('calPicker');
+    const sheet   = overlay.querySelector('.cal-sheet');
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const sheetW = Math.min(vw - 24, 320);
+    const sheetH = 380; // 概算の高さ
+
+    sheet.style.width = sheetW + 'px';
+
+    let sheetLeft, sheetTop, arrowDir;
+
+    if (triggerEl) {
+      const rect = triggerEl.getBoundingClientRect();
+      // 水平位置：トリガーの左端に合わせてビューポート内に収める
+      sheetLeft = Math.max(12, Math.min(rect.left, vw - sheetW - 12));
+      // 矢印のX位置：トリガー中央がシートのどこに来るか
+      const arrowX = rect.left + rect.width / 2 - sheetLeft - 10;
+      sheet.style.setProperty('--arrow-x', Math.max(12, Math.min(arrowX, sheetW - 32)) + 'px');
+
+      const spaceBelow = vh - rect.bottom - 8;
+      const spaceAbove = rect.top - 8;
+
+      if (spaceBelow >= sheetH || spaceBelow >= spaceAbove) {
+        // ボタンの下に開く
+        sheetTop = rect.bottom + 8;
+        arrowDir = 'arrow-up';
+      } else {
+        // ボタンの上に開く
+        sheetTop = rect.top - sheetH - 8;
+        arrowDir = 'arrow-down';
+      }
+    } else {
+      // フォールバック：中央下寄り
+      sheetLeft = Math.max(12, (vw - sheetW) / 2);
+      sheetTop  = Math.max(12, vh - sheetH - 24);
+      arrowDir  = 'arrow-up';
+      sheet.style.setProperty('--arrow-x', '28px');
+    }
+
+    // 画面外にはみ出さないよう補正
+    sheetTop = Math.max(8, Math.min(sheetTop, vh - sheetH - 8));
+
+    sheet.style.left = sheetLeft + 'px';
+    sheet.style.top  = sheetTop  + 'px';
+    sheet.style.bottom = '';
+    sheet.classList.remove('arrow-up', 'arrow-down');
+    sheet.classList.add(arrowDir);
+
+    overlay.classList.add('active');
   }
 
   function selectCalDate(date) {
@@ -2290,7 +2363,7 @@
       const t = document.getElementById('taskStartTrigger');
       t.textContent = fmtDateSlash(date); t.classList.add('has-value');
       document.getElementById('calPicker').classList.remove('active');
-      if (!taskEndDate) setTimeout(() => openCal('end'), 250);
+      if (!taskEndDate) setTimeout(() => openCal('end', document.getElementById('taskEndTrigger')), 280);
     } else if (calMode === 'end') {
       if (taskStartDate && date < taskStartDate) {
         taskEndDate = taskStartDate;
@@ -2342,9 +2415,9 @@
       document.getElementById('calPicker').classList.remove('active');
     }
   });
-  document.getElementById('taskStartTrigger').addEventListener('click', () => openCal('start'));
-  document.getElementById('taskEndTrigger').addEventListener('click', () => openCal('end'));
-  document.getElementById('scheduleDateTrigger').addEventListener('click', () => openCal('schedule'));
+  document.getElementById('taskStartTrigger').addEventListener('click', function() { openCal('start', this); });
+  document.getElementById('taskEndTrigger').addEventListener('click', function() { openCal('end', this); });
+  document.getElementById('scheduleDateTrigger').addEventListener('click', function() { openCal('schedule', this); });
 
   document.querySelectorAll('.task-label-opt').forEach(btn => {
     btn.addEventListener('click', () => {
