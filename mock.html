@@ -782,6 +782,30 @@
     margin-top: 16px;
   }
 
+  /* タスク追加モーダル：ラベル選択 */
+  .task-label-select {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .task-label-opt {
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 2px solid #ddd;
+    background: #f8f8f8;
+    color: #555;
+    font-size: 13px;
+    font-weight: bold;
+    cursor: pointer;
+    min-height: 40px;
+    transition: all 0.15s;
+  }
+  .task-label-opt[data-label="利用者"].selected   { background: #e3f0ff; color: #1a56a0; border-color: #1a56a0; }
+  .task-label-opt[data-label="紹介先"].selected   { background: #e8f5e9; color: #2E7D32; border-color: #2E7D32; }
+  .task-label-opt[data-label="市区町村"].selected { background: #fff3e0; color: #bf5e00; border-color: #bf5e00; }
+  .task-label-opt[data-label="事務処理"].selected { background: #f3f3f3; color: #444;    border-color: #888;    }
+
   /* ===== 強制ポップアップ通知（滞在アラート本番動作） ===== */
   .alert-popup-overlay {
     display: none;
@@ -1647,9 +1671,18 @@
   <div class="modal-box">
     <h3>タスクを追加</h3>
     <label>内容</label>
-    <input type="text" placeholder="例：F社 見積フォロー">
-    <label>期限</label>
-    <input type="text" placeholder="例：明日">
+    <input type="text" id="taskInputName" placeholder="例：F社 見積フォロー">
+    <label>開始日</label>
+    <input type="date" id="taskInputStart">
+    <label>終了日（期限）</label>
+    <input type="date" id="taskInputEnd">
+    <label>ラベル</label>
+    <div class="task-label-select" id="taskLabelSelect">
+      <button class="task-label-opt" data-label="利用者">利用者</button>
+      <button class="task-label-opt" data-label="紹介先">紹介先</button>
+      <button class="task-label-opt" data-label="市区町村">市区町村</button>
+      <button class="task-label-opt" data-label="事務処理">事務処理</button>
+    </div>
     <div class="modal-actions">
       <button class="btn accept" id="submitTask">追加する</button>
       <button class="btn reject" id="closeAddTask">キャンセル</button>
@@ -2003,9 +2036,63 @@
     document.getElementById('addScheduleModal').classList.remove('active');
     alert('Googleカレンダーに登録しました（モックのため実際の連携はしていません）');
   });
+  // ===== タスク追加モーダル：ラベル選択 =====
+  let selectedTaskLabel = '';
+  document.querySelectorAll('.task-label-opt').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.task-label-opt').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedTaskLabel = btn.dataset.label;
+    });
+  });
+
   document.getElementById('submitTask').addEventListener('click', () => {
+    const name  = document.getElementById('taskInputName').value.trim();
+    const start = document.getElementById('taskInputStart').value;
+    const end   = document.getElementById('taskInputEnd').value;
+    if (!name) { alert('内容を入力してください'); return; }
+    if (!selectedTaskLabel) { alert('ラベルを選択してください'); return; }
+
+    // タスクリストに動的追加
+    const fmtDate = v => v ? v.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3') : '？';
+    const dueText = (start && end) ? fmtDate(start) + '〜' + fmtDate(end) : (end ? '期限：' + fmtDate(end) : '期限：未設定');
+
+    const item = document.createElement('div');
+    item.className = 'task-item';
+    item.dataset.labels = selectedTaskLabel;
+    item.innerHTML = `
+      <input type="checkbox">
+      <div class="task-body">
+        <div class="task-name">${name}</div>
+        <div class="task-meta">
+          <span class="task-label ${selectedTaskLabel}">${selectedTaskLabel}</span>
+          <span class="task-due">${dueText}</span>
+        </div>
+      </div>
+      <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>`;
+
+    // チェックボックス・削除ボタンのイベントを付与
+    item.querySelector('input[type=checkbox]').addEventListener('change', e => {
+      item.classList.toggle('done', e.target.checked);
+    });
+    item.querySelector('.delete-x').addEventListener('click', () => {
+      if (confirm('このタスクを削除しますか？')) item.remove();
+    });
+
+    // ラベルフィルターの状態に応じて表示制御
+    if (activeLabel !== 'all' && activeLabel !== selectedTaskLabel) {
+      item.style.display = 'none';
+    }
+
+    document.getElementById('taskList').prepend(item);
+
+    // モーダルをリセットして閉じる
+    document.getElementById('taskInputName').value = '';
+    document.getElementById('taskInputStart').value = '';
+    document.getElementById('taskInputEnd').value = '';
+    document.querySelectorAll('.task-label-opt').forEach(b => b.classList.remove('selected'));
+    selectedTaskLabel = '';
     document.getElementById('addTaskModal').classList.remove('active');
-    alert('タスクを追加しました（モックのため実際の保存はしていません）');
   });
 
   // ===== タスク完了チェック =====
