@@ -349,7 +349,7 @@
   /* タスク */
   .task-item {
     display: flex;
-    align-items: center;
+    align-items: flex-start;
     gap: 12px;
     background: #fff;
     border-radius: 10px;
@@ -359,9 +359,51 @@
     min-height: 60px;
   }
   .task-item.done .task-name { text-decoration: line-through; color: #aaa; }
-  .task-item input[type=checkbox] { width: 24px; height: 24px; flex-shrink: 0; cursor: pointer; }
-  .task-name { flex: 1; font-size: 15px; }
-  .task-due { font-size: 12px; color: #999; flex-shrink: 0; }
+  .task-item input[type=checkbox] { width: 24px; height: 24px; flex-shrink: 0; cursor: pointer; margin-top: 2px; }
+  .task-body { flex: 1; min-width: 0; }
+  .task-name { font-size: 15px; margin-bottom: 5px; }
+  .task-meta { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  .task-due { font-size: 12px; color: #999; }
+
+  /* タスクラベル */
+  .task-label {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    padding: 3px 9px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .task-label.利用者    { background: #e3f0ff; color: #1a56a0; }
+  .task-label.紹介先    { background: #e8f5e9; color: #2E7D32; }
+  .task-label.市区町村  { background: #fff3e0; color: #bf5e00; }
+  .task-label.事務処理  { background: #f3f3f3; color: #555;    }
+
+  /* タスクラベル絞り込みバー */
+  .label-filter-bar {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  .label-filter-btn {
+    font-size: 13px;
+    font-weight: bold;
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 2px solid transparent;
+    cursor: pointer;
+    background: #f3f3f3;
+    color: #555;
+    min-height: 40px;
+    transition: all 0.15s;
+  }
+  .label-filter-btn.all               { background: #eef1f5; color: #333; }
+  .label-filter-btn.利用者            { background: #e3f0ff; color: #1a56a0; }
+  .label-filter-btn.紹介先            { background: #e8f5e9; color: #2E7D32; }
+  .label-filter-btn.市区町村          { background: #fff3e0; color: #bf5e00; }
+  .label-filter-btn.事務処理          { background: #f3f3f3; color: #555;    }
+  .label-filter-btn.active            { border-color: currentColor; box-shadow: 0 0 0 2px rgba(0,0,0,0.08); }
 
   /* ===== FAB（親指操作） ===== */
   .fab-wrap {
@@ -1268,47 +1310,124 @@
           <div class="section-title" style="margin:0;">すべてのタスク</div>
           <button class="gantt-btn" id="showGanttBtn">📊 ガントチャート</button>
         </div>
-        <div class="task-item">
-          <input type="checkbox">
-          <div class="task-name">B工業 見積書を送付する</div>
-          <div class="task-due">6/27〜6/27</div>
-          <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+
+        <!-- ラベル絞り込みバー -->
+        <div class="label-filter-bar">
+          <button class="label-filter-btn all active"   data-label="all">すべて</button>
+          <button class="label-filter-btn 利用者"       data-label="利用者">利用者</button>
+          <button class="label-filter-btn 紹介先"       data-label="紹介先">紹介先</button>
+          <button class="label-filter-btn 市区町村"     data-label="市区町村">市区町村</button>
+          <button class="label-filter-btn 事務処理"     data-label="事務処理">事務処理</button>
         </div>
-        <div class="task-item">
-          <input type="checkbox">
-          <div class="task-name">鈴木次郎様 ご家族へ訪問報告の連絡</div>
-          <div class="task-due">6/27〜6/27</div>
-          <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
-        </div>
-        <div class="task-item">
-          <input type="checkbox">
-          <div class="task-name">C商店 先週の訪問フォロー電話</div>
-          <div class="task-due">6/27〜6/28</div>
-          <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
-        </div>
-        <div class="task-item">
-          <input type="checkbox">
-          <div class="task-name">B興産 見積り条件のすり合わせメール</div>
-          <div class="task-due">6/28〜6/29</div>
-          <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
-        </div>
-        <div class="task-item">
-          <input type="checkbox">
-          <div class="task-name">田中花子様 ケアマネへの状況共有</div>
-          <div class="task-due">6/27〜6/30</div>
-          <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
-        </div>
-        <div class="task-item done">
-          <input type="checkbox" checked>
-          <div class="task-name">D社 契約更新書類の準備</div>
-          <div class="task-due">6/24〜6/26（完了）</div>
-          <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
-        </div>
-        <div class="task-item done">
-          <input type="checkbox" checked>
-          <div class="task-name">山田太郎様 福祉用具の動作確認結果を記録</div>
-          <div class="task-due">6/25〜6/25（完了）</div>
-          <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+
+        <div id="taskList">
+          <div class="task-item" data-labels="紹介先">
+            <input type="checkbox">
+            <div class="task-body">
+              <div class="task-name">B工業 見積書を送付する</div>
+              <div class="task-meta">
+                <span class="task-label 紹介先">紹介先</span>
+                <span class="task-due">6/27〜6/27</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item" data-labels="利用者">
+            <input type="checkbox">
+            <div class="task-body">
+              <div class="task-name">鈴木次郎様 ご家族へ訪問報告の連絡</div>
+              <div class="task-meta">
+                <span class="task-label 利用者">利用者</span>
+                <span class="task-due">6/27〜6/27</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item" data-labels="紹介先">
+            <input type="checkbox">
+            <div class="task-body">
+              <div class="task-name">C商店 先週の訪問フォロー電話</div>
+              <div class="task-meta">
+                <span class="task-label 紹介先">紹介先</span>
+                <span class="task-due">6/27〜6/28</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item" data-labels="紹介先">
+            <input type="checkbox">
+            <div class="task-body">
+              <div class="task-name">B興産 見積り条件のすり合わせメール</div>
+              <div class="task-meta">
+                <span class="task-label 紹介先">紹介先</span>
+                <span class="task-due">6/28〜6/29</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item" data-labels="利用者">
+            <input type="checkbox">
+            <div class="task-body">
+              <div class="task-name">田中花子様 ケアマネへの状況共有</div>
+              <div class="task-meta">
+                <span class="task-label 利用者">利用者</span>
+                <span class="task-due">6/27〜6/30</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item" data-labels="市区町村">
+            <input type="checkbox">
+            <div class="task-body">
+              <div class="task-name">〇〇市 サービス担当者会議の案内送付</div>
+              <div class="task-meta">
+                <span class="task-label 市区町村">市区町村</span>
+                <span class="task-due">6/28〜6/29</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item" data-labels="事務処理">
+            <input type="checkbox">
+            <div class="task-body">
+              <div class="task-name">6月分 訪問実績の入力・提出</div>
+              <div class="task-meta">
+                <span class="task-label 事務処理">事務処理</span>
+                <span class="task-due">6/27〜6/30</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item done" data-labels="事務処理">
+            <input type="checkbox" checked>
+            <div class="task-body">
+              <div class="task-name">D社 契約更新書類の準備</div>
+              <div class="task-meta">
+                <span class="task-label 事務処理">事務処理</span>
+                <span class="task-due">6/24〜6/26（完了）</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
+
+          <div class="task-item done" data-labels="利用者">
+            <input type="checkbox" checked>
+            <div class="task-body">
+              <div class="task-name">山田太郎様 福祉用具の動作確認結果を記録</div>
+              <div class="task-meta">
+                <span class="task-label 利用者">利用者</span>
+                <span class="task-due">6/25〜6/25（完了）</span>
+              </div>
+            </div>
+            <button class="delete-x" data-confirm="このタスクを削除しますか？">✕</button>
+          </div>
         </div>
       </section>
 
@@ -1902,6 +2021,20 @@
       if (confirm(btn.dataset.confirm || '削除しますか？')) {
         btn.closest('.timeline-item, .task-item').remove();
       }
+    });
+  });
+
+  // ===== タスク ラベルフィルター =====
+  let activeLabel = 'all';
+  document.querySelectorAll('.label-filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeLabel = btn.dataset.label;
+      document.querySelectorAll('.label-filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('#taskList .task-item').forEach(item => {
+        const labels = (item.dataset.labels || '').split(',').map(s => s.trim());
+        item.style.display = (activeLabel === 'all' || labels.includes(activeLabel)) ? '' : 'none';
+      });
     });
   });
 
