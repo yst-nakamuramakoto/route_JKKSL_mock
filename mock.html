@@ -2164,11 +2164,11 @@
     isDragging = false;
   }
   fabMain.addEventListener('mousedown',  e => { e.preventDefault(); onDragStart(e.clientX, e.clientY); });
-  document.addEventListener('mousemove', e => { if (dragStartX !== undefined && !isDragging || isDragging) onDragMove(e.clientX, e.clientY); });
+  document.addEventListener('mousemove', e => { if (dragStartX !== undefined) onDragMove(e.clientX, e.clientY); });
   document.addEventListener('mouseup',   () => { if (dragStartX !== undefined) { onDragEnd(); dragStartX = undefined; } });
-  fabMain.addEventListener('touchstart', e => { const t = e.touches[0]; onDragStart(t.clientX, t.clientY); }, {passive:true});
-  fabMain.addEventListener('touchmove',  e => { const t = e.touches[0]; onDragMove(t.clientX, t.clientY); }, {passive:true});
-  fabMain.addEventListener('touchend',   () => onDragEnd());
+  fabMain.addEventListener('touchstart', e => { e.stopPropagation(); const t = e.touches[0]; onDragStart(t.clientX, t.clientY); }, {passive:true});
+  fabMain.addEventListener('touchmove',  e => { e.stopPropagation(); const t = e.touches[0]; onDragMove(t.clientX, t.clientY); }, {passive:true});
+  fabMain.addEventListener('touchend',   e => { e.stopPropagation(); onDragEnd(); dragStartX = undefined; });
 
   // ===== モーダル開閉 =====
   function bindModal(openId, closeId, overlayId) {
