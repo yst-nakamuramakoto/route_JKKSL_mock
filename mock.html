@@ -1189,35 +1189,65 @@
     outline: none;
   }
   .chat-text-input:focus { border-color: #2E7D32; }
-  .chat-send-btn, .chat-mic-btn {
+  .chat-send-btn {
     width: 50px; height: 50px;
     border-radius: 50%;
     border: none;
     cursor: pointer;
     font-size: 20px;
     flex-shrink: 0;
+    background: #2E7D32; color: #fff;
   }
-  .chat-send-btn { background: #2E7D32; color: #fff; }
-  .chat-mic-btn { background: #eef1f5; color: #2E7D32; }
-  .chat-mic-btn.recording { background: #c62828; color: #fff; animation: pulse 1s infinite; }
   @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.75; transform: scale(1.08); }
   }
-  .mic-fab {
-    position: fixed;
-    bottom: 90px;
+  /* ===== マイクFAB（チャット画面専用・ムックと同仕様） ===== */
+  .mic-fab-wrap {
+    position: absolute;
     right: 20px;
-    width: 44px; height: 44px;
-    border-radius: 50%;
-    background: #4CAF50;
-    color: #fff;
-    border: none;
-    font-size: 20px;
-    cursor: pointer;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    z-index: 90;
+    bottom: 80px; /* チャット入力バーの上 */
     display: none;
+    z-index: 80;
+    touch-action: none;
+    user-select: none;
+  }
+  .mic-fab-wrap.visible { display: block; }
+  .mic-fab-btn {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    background: #1565c0;
+    border: none;
+    padding: 0;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.30);
+    cursor: grab;
+    transition: background 0.2s, transform 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 36px;
+    color: #fff;
+  }
+  .mic-fab-btn:active { cursor: grabbing; }
+  .mic-fab-btn.recording {
+    background: #c62828;
+    animation: pulse 0.9s infinite;
+  }
+  .mic-fab-label {
+    position: absolute;
+    bottom: -22px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 11px;
+    font-weight: bold;
+    color: #1565c0;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.85);
+    border-radius: 8px;
+    padding: 2px 7px;
+  }
+  .mic-fab-btn.recording + .mic-fab-label {
+    color: #c62828;
   }
 </style>
 </head>
@@ -1796,13 +1826,18 @@
       <section class="screen" id="chat">
         <div class="chat-messages" id="chatMessages"></div>
         <div class="chat-input-bar">
-          <button class="chat-mic-btn" id="chatMic" title="音声入力">🎙️</button>
           <input class="chat-text-input" id="chatInput" type="text" placeholder="話しかけてください…">
           <button class="chat-send-btn" id="chatSend" title="送信">➤</button>
         </div>
       </section>
 
     </main>
+
+    <!-- マイクFAB（チャット画面専用・ドラッグ可能） -->
+    <div class="mic-fab-wrap" id="micFabWrap">
+      <button class="mic-fab-btn" id="micFabBtn" title="音声入力">🎙️</button>
+      <span class="mic-fab-label" id="micFabLabel">タップして話す</span>
+    </div>
 
     <!-- 親指で完結するFAB（ホームのみ表示） -->
     <div class="fab-wrap" id="fabWrap" style="position:relative;">
@@ -1928,6 +1963,7 @@
     topbarTitle.textContent = titles[target] || target;
     appShell.classList.remove('sidebar-open');
     fabWrap.style.display = (target === 'home') ? 'flex' : 'none';
+    micFabWrap.classList.toggle('visible', target === 'chat');
     if (target === 'chat') initChat();
   }
 
@@ -2169,6 +2205,42 @@
   fabMain.addEventListener('touchstart', e => { e.stopPropagation(); const t = e.touches[0]; onDragStart(t.clientX, t.clientY); }, {passive:true});
   fabMain.addEventListener('touchmove',  e => { e.stopPropagation(); const t = e.touches[0]; onDragMove(t.clientX, t.clientY); }, {passive:true});
   fabMain.addEventListener('touchend',   e => { e.stopPropagation(); onDragEnd(); dragStartX = undefined; });
+
+  // ===== マイクFAB ドラッグ移動 =====
+  const micFabWrap = document.getElementById('micFabWrap');
+  const micFabBtn  = document.getElementById('micFabBtn');
+  const micFabLabel = document.getElementById('micFabLabel');
+  let micDragging = false, micDragX, micDragY, micStartRight, micStartBottom;
+
+  function getMicContainer() { return micFabWrap.parentElement; }
+
+  function micDragStart(cx, cy) {
+    micDragging = false;
+    micDragX = cx; micDragY = cy;
+    const rect    = getMicContainer().getBoundingClientRect();
+    const micRect = micFabWrap.getBoundingClientRect();
+    micStartRight  = rect.right  - micRect.right;
+    micStartBottom = rect.bottom - micRect.bottom;
+  }
+  function micDragMove(cx, cy) {
+    if (Math.abs(cx - micDragX) < 4 && Math.abs(cy - micDragY) < 4) return;
+    micDragging = true;
+    const rect = getMicContainer().getBoundingClientRect();
+    const newRight  = Math.max(4, Math.min(rect.width  - 84, micStartRight  + (micDragX - cx)));
+    const newBottom = Math.max(4, Math.min(rect.height - 84, micStartBottom + (micDragY - cy)));
+    micFabWrap.style.right  = newRight  + 'px';
+    micFabWrap.style.bottom = newBottom + 'px';
+  }
+  function micDragEnd() {
+    if (!micDragging) micToggleRecording();
+    micDragging = false;
+  }
+  micFabBtn.addEventListener('mousedown',  e => { e.preventDefault(); micDragStart(e.clientX, e.clientY); });
+  document.addEventListener('mousemove',   e => { if (micDragX !== undefined) micDragMove(e.clientX, e.clientY); });
+  document.addEventListener('mouseup',     () => { if (micDragX !== undefined) { micDragEnd(); micDragX = undefined; } });
+  micFabBtn.addEventListener('touchstart', e => { e.stopPropagation(); const t = e.touches[0]; micDragStart(t.clientX, t.clientY); }, {passive:true});
+  micFabBtn.addEventListener('touchmove',  e => { e.stopPropagation(); const t = e.touches[0]; micDragMove(t.clientX, t.clientY); }, {passive:true});
+  micFabBtn.addEventListener('touchend',   e => { e.stopPropagation(); micDragEnd(); micDragX = undefined; });
 
   // ===== モーダル開閉 =====
   function bindModal(openId, closeId, overlayId) {
@@ -2620,9 +2692,8 @@
 
   // ===== AIアシスタント チャット =====
   const chatMessages = document.getElementById('chatMessages');
-  const chatInput   = document.getElementById('chatInput');
-  const chatSend    = document.getElementById('chatSend');
-  const chatMic     = document.getElementById('chatMic');
+  const chatInput    = document.getElementById('chatInput');
+  const chatSend     = document.getElementById('chatSend');
   let chatInitialized = false;
 
   const BOT_AVATAR = 'MuK.jpg';
@@ -2742,8 +2813,20 @@
   chatSend.addEventListener('click', sendChat);
   chatInput.addEventListener('keydown', e => { if (e.key === 'Enter') sendChat(); });
 
-  // 音声入力（Web Speech API）
+  // 音声入力（Web Speech API） — マイクFABに接続
   let recognition = null;
+  function micToggleRecording() {
+    if (!recognition) return;
+    if (micFabBtn.classList.contains('recording')) {
+      recognition.stop();
+      micFabBtn.classList.remove('recording');
+      micFabLabel.textContent = 'タップして話す';
+    } else {
+      recognition.start();
+      micFabBtn.classList.add('recording');
+      micFabLabel.textContent = '聞いています…';
+    }
+  }
   if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
     const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
     recognition = new SR();
@@ -2751,24 +2834,22 @@
     recognition.interimResults = false;
     recognition.onresult = e => {
       chatInput.value = e.results[0][0].transcript;
-      chatMic.classList.remove('recording');
+      micFabBtn.classList.remove('recording');
+      micFabLabel.textContent = 'タップして話す';
       sendChat();
     };
-    recognition.onerror = () => chatMic.classList.remove('recording');
-    recognition.onend   = () => chatMic.classList.remove('recording');
-    chatMic.addEventListener('click', () => {
-      if (chatMic.classList.contains('recording')) {
-        recognition.stop();
-        chatMic.classList.remove('recording');
-      } else {
-        recognition.start();
-        chatMic.classList.add('recording');
-      }
-    });
+    recognition.onerror = () => {
+      micFabBtn.classList.remove('recording');
+      micFabLabel.textContent = 'タップして話す';
+    };
+    recognition.onend = () => {
+      micFabBtn.classList.remove('recording');
+      micFabLabel.textContent = 'タップして話す';
+    };
   } else {
-    chatMic.title = 'このブラウザは音声入力に対応していません（Chrome推奨）';
-    chatMic.style.opacity = '0.4';
-    chatMic.style.cursor = 'not-allowed';
+    micFabBtn.style.opacity = '0.4';
+    micFabBtn.style.cursor  = 'not-allowed';
+    micFabLabel.textContent = 'Chrome推奨';
   }
 
   function initChat() {
