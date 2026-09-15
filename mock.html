@@ -222,13 +222,13 @@
   .btn.small { flex: none; padding: 10px 14px; font-size: 13px; }
 
   .section-title {
-    font-size: 12px;
-    color: #5f6368;
-    margin: 24px 0 8px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #eee;
+    font-size: 19px;
+    color: #202124;
+    margin: 32px 0 14px;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #dadce0;
   }
   .section-title:first-child { margin-top: 0; }
 
@@ -314,7 +314,7 @@
     flex-shrink: 0;
     min-height: 44px;
     padding: 6px 12px;
-    border-radius: 22px;
+    border-radius: 8px;
     border: 1.5px solid #dadce0;
     background: #fff;
     font-size: 12px;
@@ -338,21 +338,22 @@
     color: inherit;
     opacity: .6;
   }
-  .member-section { margin-bottom: 22px; }
+  .member-section { margin-bottom: 32px; }
+  .member-section:first-child { margin-top: 0; }
   .member-section-head {
     display: flex;
     align-items: center;
-    gap: 8px;
-    font-size: 13px;
-    font-weight: 600;
-    color: #3c4043;
-    padding-bottom: 6px;
-    margin-bottom: 10px;
-    border-bottom: 1px solid #eee;
+    gap: 9px;
+    font-size: 17px;
+    font-weight: 700;
+    color: #202124;
+    padding: 4px 0 10px;
+    margin-bottom: 14px;
+    border-bottom: 2px solid #eee;
   }
   .member-section-head .dot {
-    width: 9px;
-    height: 9px;
+    width: 12px;
+    height: 12px;
     border-radius: 50%;
     flex-shrink: 0;
   }
@@ -363,7 +364,7 @@
     flex-shrink: 0;
     min-height: 44px;
     padding: 6px 14px;
-    border-radius: 22px;
+    border-radius: 8px;
     border: 1.5px dashed #9aa0a6;
     background: #fff;
     font-size: 12px;
@@ -387,7 +388,7 @@
     align-items: center;
     gap: 5px;
     padding: 4px 10px;
-    border-radius: 14px;
+    border-radius: 6px;
     border: 1.5px solid #dadce0;
     font-size: 11px;
     font-weight: 600;
@@ -401,7 +402,7 @@
   .share-add-btn {
     min-height: 40px;
     padding: 5px 14px;
-    border-radius: 20px;
+    border-radius: 8px;
     border: 1.5px dashed #9aa0a6;
     background: #fff;
     font-size: 12px;
@@ -2693,6 +2694,7 @@
       section.className = 'member-section';
       const head = document.createElement('div');
       head.className = 'member-section-head';
+      head.style.borderBottomColor = member.color;
       head.innerHTML = '<span class="dot" style="background:' + member.color + '"></span>' + member.name;
       section.appendChild(head);
 
@@ -2729,6 +2731,7 @@
       section.className = 'member-section';
       const head = document.createElement('div');
       head.className = 'member-section-head';
+      head.style.borderBottomColor = member.color;
       head.innerHTML = '<span class="dot" style="background:' + member.color + '"></span>' + member.name;
       section.appendChild(head);
 
