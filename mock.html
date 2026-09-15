@@ -443,6 +443,7 @@
     margin-bottom: 10px;
     box-shadow: 0 1px 2px rgba(60,64,67,0.08);
     min-height: 60px;
+    cursor: pointer;
   }
   .task-item.done .task-name { text-decoration: line-through; color: #aaa; }
   .task-item input[type=checkbox] { width: 24px; height: 24px; flex-shrink: 0; cursor: pointer; margin-top: 2px; accent-color: #2E7D32; }
@@ -1143,27 +1144,12 @@
     resize: vertical;
     min-height: 64px;
   }
-  .detail-row {
+  .detail-time-row {
     display: flex;
+    align-items: center;
     gap: 8px;
-    font-size: 13px;
-    margin-bottom: 8px;
   }
-  .detail-label {
-    flex-shrink: 0;
-    color: #5f6368;
-    width: 88px;
-  }
-  .detail-memo {
-    font-size: 13px;
-    color: #333;
-    background: #f8f9fa;
-    border: 1px solid #e8eaed;
-    border-radius: 8px;
-    padding: 10px;
-    white-space: pre-wrap;
-    line-height: 1.6;
-  }
+  .detail-time-row input[type=time] { flex: 1; }
   .modal-actions {
     display: flex;
     gap: 8px;
@@ -2074,16 +2060,51 @@
   </div>
 </div>
 
-<!-- 予定詳細（タップしたスケジュールのダミー内容を表示） -->
+<!-- タスク詳細（タップしたタスクの内容を確認・編集） -->
+<div class="modal-overlay" id="taskDetailModal">
+  <div class="modal-box">
+    <h3>タスクを編集</h3>
+    <label>内容</label>
+    <input type="text" id="taskDetailNameInput">
+    <label>開始日</label>
+    <button class="date-trigger" id="taskDetailStartTrigger">開始日を選択</button>
+    <label>終了日（期限）</label>
+    <button class="date-trigger" id="taskDetailEndTrigger">終了日を選択</button>
+    <div id="taskDetailLabelSection">
+      <label>ラベル</label>
+      <div class="task-label-select" id="taskDetailLabelSelect">
+        <button class="task-label-opt" data-label="利用者">利用者</button>
+        <button class="task-label-opt" data-label="紹介先">紹介先</button>
+        <button class="task-label-opt" data-label="市区町村">市区町村</button>
+        <button class="task-label-opt" data-label="事務処理">事務処理</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn accept" id="saveTaskDetail">保存する</button>
+      <button class="btn reject" id="closeTaskDetail">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- 予定詳細（タップしたスケジュールの内容を確認・編集） -->
 <div class="modal-overlay" id="scheduleDetailModal">
   <div class="modal-box">
-    <h3 id="detailTitle">予定名</h3>
-    <div class="detail-row"><span class="detail-label">🕒 時間</span><span id="detailTime"></span></div>
-    <div class="detail-row"><span class="detail-label">📍 場所</span><span id="detailLoc"></span></div>
+    <h3>予定を編集</h3>
+    <label>タイトル</label>
+    <input type="text" id="detailTitleInput">
+    <label>時間</label>
+    <div class="detail-time-row">
+      <input type="time" id="detailTimeStartInput">
+      <span class="roller-range-sep">〜</span>
+      <input type="time" id="detailTimeEndInput">
+    </div>
+    <label>場所</label>
+    <input type="text" id="detailLocInput" placeholder="例：東京都〇〇区...">
     <label>予定内容</label>
-    <div class="detail-memo" id="detailMemo"></div>
+    <textarea id="detailMemoInput" rows="3" placeholder="例：新商品のご案内と見積り相談"></textarea>
     <div class="modal-actions">
-      <button class="btn reject" id="closeScheduleDetail">閉じる</button>
+      <button class="btn accept" id="saveScheduleDetail">保存する</button>
+      <button class="btn reject" id="closeScheduleDetail">キャンセル</button>
     </div>
   </div>
 </div>
@@ -2222,7 +2243,7 @@
   let dayDate = new Date(TODAY);
   function dowIndex(d) { return (d.getDay() + 6) % 7; }
 
-  // ===== 予定詳細（タップしたスケジュールのダミー内容を表示） =====
+  // ===== 予定詳細（タップしたスケジュールの内容を確認・編集） =====
   function setScheduleDataset(item, ev) {
     item.dataset.name = ev.name;
     item.dataset.time = ev.time;
@@ -2230,14 +2251,44 @@
     item.dataset.memo = ev.memo || '';
   }
   const scheduleDetailModal = document.getElementById('scheduleDetailModal');
+  const detailTitleInput = document.getElementById('detailTitleInput');
+  const detailTimeStartInput = document.getElementById('detailTimeStartInput');
+  const detailTimeEndInput = document.getElementById('detailTimeEndInput');
+  const detailLocInput = document.getElementById('detailLocInput');
+  const detailMemoInput = document.getElementById('detailMemoInput');
+  let detailItem = null;
   function openScheduleDetail(item) {
-    document.getElementById('detailTitle').textContent = item.dataset.name;
-    document.getElementById('detailTime').textContent = item.dataset.time.replace('-', ' 〜 ');
-    document.getElementById('detailLoc').textContent = item.dataset.loc || '（未設定）';
-    document.getElementById('detailMemo').textContent = item.dataset.memo || '（ダミー：詳細情報はまだ登録されていません）';
+    detailItem = item;
+    const [start, end] = item.dataset.time.split('-');
+    detailTitleInput.value = item.dataset.name;
+    detailTimeStartInput.value = start || '';
+    detailTimeEndInput.value = end || '';
+    detailLocInput.value = item.dataset.loc || '';
+    detailMemoInput.value = item.dataset.memo || '';
     scheduleDetailModal.classList.add('active');
   }
   document.getElementById('closeScheduleDetail').addEventListener('click', () => {
+    scheduleDetailModal.classList.remove('active');
+  });
+  document.getElementById('saveScheduleDetail').addEventListener('click', () => {
+    if (!detailItem) return;
+    const name = detailTitleInput.value.trim() || detailItem.dataset.name;
+    const start = detailTimeStartInput.value;
+    const end = detailTimeEndInput.value;
+    const timeStr = (start && end) ? (start + '-' + end) : detailItem.dataset.time;
+    const loc = detailLocInput.value.trim();
+    const memo = detailMemoInput.value.trim();
+
+    detailItem.dataset.name = name;
+    detailItem.dataset.time = timeStr;
+    detailItem.dataset.loc = loc;
+    detailItem.dataset.memo = memo;
+
+    detailItem.querySelector('.timeline-body .name').textContent = name;
+    detailItem.querySelector('.timeline-time').innerHTML = timeStr.replace('-', '<br>-');
+    const delBtn = detailItem.querySelector('.delete-x');
+    if (delBtn) delBtn.dataset.confirm = '「' + name + '」を削除しますか？';
+
     scheduleDetailModal.classList.remove('active');
   });
 
@@ -2623,6 +2674,7 @@
   // ===== タスク追加モーダル：ラベル選択 =====
   let selectedTaskLabel = '';
   let taskStartDate = null, taskEndDate = null, scheduleDate = null;
+  let taskDetailStartDate = null, taskDetailEndDate = null;
   let calMode = '';
   const CAL_TODAY = new Date(2026, 5, 27);
 
@@ -2654,9 +2706,13 @@
       if (dow === 6) cls += ' dow-sat';
       if (sameDay(date, CAL_TODAY)) cls += ' today';
 
-      const isStart = sameDay(date, taskStartDate) || (calMode === 'schedule' && sameDay(date, scheduleDate)) || (calMode === 'home' && sameDay(date, dayDate));
-      const isEnd   = sameDay(date, taskEndDate);
-      const inRange = taskStartDate && taskEndDate && date > taskStartDate && date < taskEndDate;
+      const isEditRange = (calMode === 'editStart' || calMode === 'editEnd');
+      const rangeStart = isEditRange ? taskDetailStartDate : taskStartDate;
+      const rangeEnd   = isEditRange ? taskDetailEndDate   : taskEndDate;
+
+      const isStart = sameDay(date, rangeStart) || (calMode === 'schedule' && sameDay(date, scheduleDate)) || (calMode === 'home' && sameDay(date, dayDate));
+      const isEnd   = sameDay(date, rangeEnd);
+      const inRange = rangeStart && rangeEnd && date > rangeStart && date < rangeEnd;
 
       if (isStart) cls += ' selected-start';
       if (isEnd)   cls += ' selected-end';
@@ -2664,8 +2720,8 @@
         cls += ' in-range';
         const dayBefore = new Date(calYear, calMonth, d - 1);
         const dayAfter  = new Date(calYear, calMonth, d + 1);
-        if (sameDay(dayBefore, taskStartDate)) cls += ' range-left';
-        if (sameDay(dayAfter,  taskEndDate))   cls += ' range-right';
+        if (sameDay(dayBefore, rangeStart)) cls += ' range-left';
+        if (sameDay(dayAfter,  rangeEnd))   cls += ' range-right';
       }
 
       cell.className = cls;
@@ -2680,10 +2736,15 @@
 
   function openCal(mode, triggerEl) {
     calMode = mode;
-    const cur = mode === 'start' ? taskStartDate : mode === 'end' ? taskEndDate : mode === 'home' ? dayDate : scheduleDate;
+    const cur = mode === 'start' ? taskStartDate
+      : mode === 'end' ? taskEndDate
+      : mode === 'editStart' ? taskDetailStartDate
+      : mode === 'editEnd' ? taskDetailEndDate
+      : mode === 'home' ? dayDate
+      : scheduleDate;
     calYear  = cur ? cur.getFullYear() : CAL_TODAY.getFullYear();
     calMonth = cur ? cur.getMonth()    : CAL_TODAY.getMonth();
-    const labels = { start: '開始日を選択', end: '終了日（期限）を選択', schedule: '予定日を選択', home: '日付を選択' };
+    const labels = { start: '開始日を選択', end: '終了日（期限）を選択', editStart: '開始日を選択', editEnd: '終了日（期限）を選択', schedule: '予定日を選択', home: '日付を選択' };
     document.getElementById('calModeLabel').textContent = labels[mode];
     renderCal();
 
@@ -2768,6 +2829,25 @@
       dayDate = date;
       activateView('day');
       document.getElementById('calPicker').classList.remove('active');
+    } else if (calMode === 'editStart') {
+      taskDetailStartDate = date;
+      if (taskDetailEndDate && taskDetailEndDate < taskDetailStartDate) taskDetailEndDate = null;
+      const t = document.getElementById('taskDetailStartTrigger');
+      t.textContent = fmtDateSlash(date); t.classList.add('has-value');
+      document.getElementById('calPicker').classList.remove('active');
+      if (!taskDetailEndDate) setTimeout(() => openCal('editEnd', document.getElementById('taskDetailEndTrigger')), 280);
+    } else if (calMode === 'editEnd') {
+      if (taskDetailStartDate && date < taskDetailStartDate) {
+        taskDetailEndDate = taskDetailStartDate;
+        taskDetailStartDate = date;
+        const ts = document.getElementById('taskDetailStartTrigger');
+        ts.textContent = fmtDateSlash(taskDetailStartDate); ts.classList.add('has-value');
+      } else {
+        taskDetailEndDate = date;
+      }
+      const te = document.getElementById('taskDetailEndTrigger');
+      te.textContent = fmtDateSlash(taskDetailEndDate); te.classList.add('has-value');
+      document.getElementById('calPicker').classList.remove('active');
     }
     renderCal();
   }
@@ -2794,6 +2874,14 @@
       scheduleDate = null;
       const t = document.getElementById('scheduleDateTrigger');
       t.textContent = '日付を選択'; t.classList.remove('has-value');
+    } else if (calMode === 'editStart') {
+      taskDetailStartDate = null;
+      const t = document.getElementById('taskDetailStartTrigger');
+      t.textContent = '開始日を選択'; t.classList.remove('has-value');
+    } else if (calMode === 'editEnd') {
+      taskDetailEndDate = null;
+      const t = document.getElementById('taskDetailEndTrigger');
+      t.textContent = '終了日を選択'; t.classList.remove('has-value');
     }
     document.getElementById('calPicker').classList.remove('active');
   });
@@ -2806,14 +2894,20 @@
   document.getElementById('taskEndTrigger').addEventListener('click', function() { openCal('end', this); });
   document.getElementById('scheduleDateTrigger').addEventListener('click', function() { openCal('schedule', this); });
   homeDateLabel.addEventListener('click', function() { openCal('home', this); });
+  document.getElementById('taskDetailStartTrigger').addEventListener('click', function() { openCal('editStart', this); });
+  document.getElementById('taskDetailEndTrigger').addEventListener('click', function() { openCal('editEnd', this); });
 
-  document.querySelectorAll('.task-label-opt').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.task-label-opt').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-      selectedTaskLabel = btn.dataset.label;
+  function wireLabelSelect(containerId, onSelect) {
+    const opts = document.querySelectorAll('#' + containerId + ' .task-label-opt');
+    opts.forEach(btn => {
+      btn.addEventListener('click', () => {
+        opts.forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        onSelect(btn.dataset.label);
+      });
     });
-  });
+  }
+  wireLabelSelect('taskLabelSelect', label => { selectedTaskLabel = label; });
 
   document.getElementById('submitTask').addEventListener('click', () => {
     const name = document.getElementById('taskInputName').value.trim();
@@ -2848,6 +2942,7 @@
     item.querySelector('.delete-x').addEventListener('click', () => {
       if (confirm('このタスクを削除しますか？')) item.remove();
     });
+    bindTaskItemEdit(item);
 
     // ラベルフィルターの状態に応じて表示制御
     if (activeLabel !== 'all' && activeLabel !== selectedTaskLabel) {
@@ -2863,7 +2958,7 @@
     ts.textContent = '開始日を選択'; ts.classList.remove('has-value');
     const te = document.getElementById('taskEndTrigger');
     te.textContent = '終了日を選択'; te.classList.remove('has-value');
-    document.querySelectorAll('.task-label-opt').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('#taskLabelSelect .task-label-opt').forEach(b => b.classList.remove('selected'));
     selectedTaskLabel = '';
     document.getElementById('addTaskModal').classList.remove('active');
   });
@@ -2873,6 +2968,98 @@
     cb.addEventListener('change', () => {
       cb.closest('.task-item').classList.toggle('done', cb.checked);
     });
+  });
+
+  // ===== タスク詳細（タップしたタスクの内容を確認・編集） =====
+  const taskDetailModal = document.getElementById('taskDetailModal');
+  const taskDetailNameInput = document.getElementById('taskDetailNameInput');
+  const taskDetailStartTrigger = document.getElementById('taskDetailStartTrigger');
+  const taskDetailEndTrigger = document.getElementById('taskDetailEndTrigger');
+  const taskDetailLabelSection = document.getElementById('taskDetailLabelSection');
+  let selectedEditTaskLabel = '';
+  let detailTaskItem = null;
+  wireLabelSelect('taskDetailLabelSelect', label => { selectedEditTaskLabel = label; });
+
+  function bindTaskItemEdit(item) {
+    item.addEventListener('click', e => {
+      if (e.target.closest('input[type=checkbox]') || e.target.closest('.delete-x')) return;
+      openTaskDetail(item);
+    });
+  }
+  document.querySelectorAll('.task-item').forEach(bindTaskItemEdit);
+
+  // 既存の「期限」表示テキスト（例：6/27〜6/28、期限：今日、完了済み）を日付に読み替える簡易パーサー
+  function parseDueText(text) {
+    const year = CAL_TODAY.getFullYear();
+    let m = text.match(/(\d{1,2})\/(\d{1,2})〜(\d{1,2})\/(\d{1,2})/);
+    if (m) return { start: new Date(year, +m[1]-1, +m[2]), end: new Date(year, +m[3]-1, +m[4]) };
+    m = text.match(/期限：(\d{1,2})\/(\d{1,2})/);
+    if (m) return { start: null, end: new Date(year, +m[1]-1, +m[2]) };
+    m = text.match(/開始：(\d{1,2})\/(\d{1,2})/);
+    if (m) return { start: new Date(year, +m[1]-1, +m[2]), end: null };
+    if (text.includes('今日')) return { start: null, end: new Date(CAL_TODAY) };
+    return { start: null, end: null };
+  }
+  function setDateTrigger(triggerEl, date, placeholder) {
+    if (date) { triggerEl.textContent = fmtDateSlash(date); triggerEl.classList.add('has-value'); }
+    else { triggerEl.textContent = placeholder; triggerEl.classList.remove('has-value'); }
+  }
+
+  function openTaskDetail(item) {
+    detailTaskItem = item;
+    taskDetailNameInput.value = item.querySelector('.task-name').textContent;
+
+    const dueEl = item.querySelector('.task-due');
+    const parsed = parseDueText(dueEl ? dueEl.textContent : '');
+    taskDetailStartDate = parsed.start;
+    taskDetailEndDate = parsed.end;
+    setDateTrigger(taskDetailStartTrigger, taskDetailStartDate, '開始日を選択');
+    setDateTrigger(taskDetailEndTrigger, taskDetailEndDate, '終了日を選択');
+
+    const currentLabel = item.dataset.labels || '';
+    document.querySelectorAll('#taskDetailLabelSelect .task-label-opt').forEach(b => {
+      b.classList.toggle('selected', b.dataset.label === currentLabel);
+    });
+    selectedEditTaskLabel = currentLabel;
+    taskDetailLabelSection.style.display = item.querySelector('.task-label') ? '' : 'none';
+
+    taskDetailModal.classList.add('active');
+  }
+  document.getElementById('closeTaskDetail').addEventListener('click', () => {
+    taskDetailModal.classList.remove('active');
+  });
+  document.getElementById('saveTaskDetail').addEventListener('click', () => {
+    if (!detailTaskItem) return;
+    const name = taskDetailNameInput.value.trim() || detailTaskItem.querySelector('.task-name').textContent;
+    const fmtShort = d => pad2(d.getMonth()+1) + '/' + pad2(d.getDate());
+    const isDone = detailTaskItem.classList.contains('done');
+    let due;
+    if (taskDetailStartDate && taskDetailEndDate) {
+      due = fmtShort(taskDetailStartDate) + '〜' + fmtShort(taskDetailEndDate);
+      if (isDone) due += '（完了）';
+    } else if (taskDetailEndDate) {
+      due = '期限：' + fmtShort(taskDetailEndDate);
+    } else if (taskDetailStartDate) {
+      due = '開始：' + fmtShort(taskDetailStartDate);
+    } else {
+      due = isDone ? '完了済み' : '期限：未設定';
+    }
+
+    detailTaskItem.querySelector('.task-name').textContent = name;
+    const dueEl = detailTaskItem.querySelector('.task-due');
+    if (dueEl) dueEl.textContent = due;
+
+    const labelEl = detailTaskItem.querySelector('.task-label');
+    if (labelEl && selectedEditTaskLabel) {
+      labelEl.className = 'task-label ' + selectedEditTaskLabel;
+      labelEl.textContent = selectedEditTaskLabel;
+      detailTaskItem.dataset.labels = selectedEditTaskLabel;
+    }
+
+    const delBtn = detailTaskItem.querySelector('.delete-x');
+    if (delBtn) delBtn.dataset.confirm = '「' + name + '」を削除しますか？';
+
+    taskDetailModal.classList.remove('active');
   });
 
   // ===== 削除（確認ダイアログ） =====
