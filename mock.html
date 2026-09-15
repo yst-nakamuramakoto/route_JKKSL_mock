@@ -158,6 +158,23 @@
     justify-content: center;
   }
   #topbarTitle { flex: 1; }
+  .topbar-home-btn {
+    background: rgba(255,255,255,0.14);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 6px 8px;
+    flex-shrink: 0;
+    line-height: 1;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .topbar-home-btn[hidden] { display: none; }
   main {
     flex: 1;
     overflow-y: auto;
@@ -1447,6 +1464,7 @@
     <div class="topbar">
       <button class="menu-btn" id="menuBtn">☰</button>
       <span id="topbarTitle">ホーム</span>
+      <button class="topbar-home-btn" id="topbarHomeBtn" title="ホームに戻る" hidden>↩️</button>
     </div>
 
     <main>
@@ -2142,6 +2160,7 @@
   const sideItems = document.querySelectorAll('.side-item');
   const screens = document.querySelectorAll('.screen');
   const topbarTitle = document.getElementById('topbarTitle');
+  const topbarHomeBtn = document.getElementById('topbarHomeBtn');
   const fabWrap = document.getElementById('fabWrap');
   const titles = { home: 'ホーム', ai: 'AI提案', tasks: 'タスク', route: 'ルート提案', parking: '駐車場リスト', visit: '滞在アラート', chat: '🎙️ AIアシスタント', gantt: 'ガントチャート' };
 
@@ -2158,11 +2177,14 @@
     sideItems.forEach(i => i.classList.toggle('active', i.dataset.screen === target));
     screens.forEach(s => s.classList.toggle('active', s.id === target));
     topbarTitle.textContent = titles[target] || target;
+    topbarHomeBtn.hidden = (target === 'home');
     appShell.classList.remove('sidebar-open');
     fabWrap.style.display = (target === 'home') ? 'flex' : 'none';
     micFabWrap.classList.toggle('visible', target === 'chat');
     if (target === 'chat') initChat();
   }
+
+  topbarHomeBtn.addEventListener('click', () => goToScreen('home'));
 
   sideItems.forEach(item => {
     item.addEventListener('click', () => goToScreen(item.dataset.screen));
