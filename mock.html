@@ -299,6 +299,152 @@
   .view-pane { display: none; }
   .view-pane.active { display: block; }
 
+  /* ===== メンバー選択（複数人のスケジュールを重ねて表示） ===== */
+  .member-select {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+    margin-bottom: 16px;
+  }
+  .member-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 6px 12px;
+    border-radius: 22px;
+    border: 1.5px solid #dadce0;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5f6368;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+  .member-chip .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .member-chip-remove {
+    margin-left: 2px;
+    padding: 6px;
+    font-size: 14px;
+    line-height: 1;
+    color: inherit;
+    opacity: .6;
+  }
+  .member-section { margin-bottom: 22px; }
+  .member-section-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #3c4043;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  .member-section-head .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .member-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 6px 14px;
+    border-radius: 22px;
+    border: 1.5px dashed #9aa0a6;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5f6368;
+    cursor: pointer;
+    white-space: nowrap;
+    touch-action: manipulation;
+  }
+
+  /* ===== 共有チップ（予定・タスクの登録／編集モーダル共通） ===== */
+  .share-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+  }
+  .share-chip {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 14px;
+    border: 1.5px solid #dadce0;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .share-chip .dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .share-add-btn {
+    min-height: 40px;
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1.5px dashed #9aa0a6;
+    background: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    color: #5f6368;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+
+  /* ===== メンバー選択ピッカー（表示に追加／共有 共通） ===== */
+  .member-picker-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    padding: 10px 4px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .member-picker-row input[type=checkbox] {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    accent-color: #2E7D32;
+  }
+  .member-picker-row .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .member-picker-info { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+  .member-picker-name { font-size: 14px; font-weight: 600; color: #202124; }
+  .member-picker-email {
+    font-size: 11px;
+    color: #888;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .member-picker-empty { font-size: 13px; color: #999; padding: 14px 4px; text-align: center; }
+
   .home-header {
     display: flex;
     justify-content: space-between;
@@ -360,7 +506,7 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #2E7D32;
+    background: var(--dot-color, #2E7D32);
     flex-shrink: 0;
   }
   .timeline-item.free .timeline-body .name::before {
@@ -1509,6 +1655,8 @@
           <button class="vs-btn" data-view="month">月</button>
         </div>
 
+        <div class="member-select" id="memberSelect"></div>
+
         <!-- 日表示 -->
         <div class="view-pane active" id="view-day">
           <div class="section-title">スケジュール（Googleカレンダー連携）</div>
@@ -2036,6 +2184,8 @@
     <input type="text" placeholder="例：東京都〇〇区...">
     <label>予定内容</label>
     <textarea placeholder="例：新商品のご案内と見積り相談" rows="3"></textarea>
+    <label>共有</label>
+    <div class="share-chips" id="scheduleAddShareChips"></div>
     <div class="modal-actions">
       <button class="btn accept" id="submitSchedule">登録する</button>
       <button class="btn reject" id="closeAddSchedule">キャンセル</button>
@@ -2060,6 +2210,8 @@
       <button class="task-label-opt" data-label="市区町村">市区町村</button>
       <button class="task-label-opt" data-label="事務処理">事務処理</button>
     </div>
+    <label>共有</label>
+    <div class="share-chips" id="taskAddShareChips"></div>
     <div class="modal-actions">
       <button class="btn accept" id="submitTask">追加する</button>
       <button class="btn reject" id="closeAddTask">キャンセル</button>
@@ -2086,6 +2238,8 @@
         <button class="task-label-opt" data-label="事務処理">事務処理</button>
       </div>
     </div>
+    <label>共有</label>
+    <div class="share-chips" id="taskDetailShareChips"></div>
     <div class="modal-actions">
       <button class="btn accept" id="saveTaskDetail">保存する</button>
       <button class="btn reject" id="closeTaskDetail">キャンセル</button>
@@ -2096,7 +2250,7 @@
 <!-- 予定詳細（タップしたスケジュールの内容を確認・編集） -->
 <div class="modal-overlay" id="scheduleDetailModal">
   <div class="modal-box">
-    <h3>予定を編集</h3>
+    <h3 id="scheduleDetailTitle">予定を編集</h3>
     <label>タイトル</label>
     <input type="text" id="detailTitleInput">
     <label>時間</label>
@@ -2109,9 +2263,25 @@
     <input type="text" id="detailLocInput" placeholder="例：東京都〇〇区...">
     <label>予定内容</label>
     <textarea id="detailMemoInput" rows="3" placeholder="例：新商品のご案内と見積り相談"></textarea>
+    <div id="scheduleDetailShareSection">
+      <label>共有</label>
+      <div class="share-chips" id="scheduleDetailShareChips"></div>
+    </div>
     <div class="modal-actions">
       <button class="btn accept" id="saveScheduleDetail">保存する</button>
       <button class="btn reject" id="closeScheduleDetail">キャンセル</button>
+    </div>
+  </div>
+</div>
+
+<!-- メンバー選択（表示に追加／予定・タスクの共有 共通ピッカー） -->
+<div class="modal-overlay" id="memberPickerModal">
+  <div class="modal-box">
+    <h3 id="memberPickerTitle">メンバーを選択</h3>
+    <div id="memberPickerList"></div>
+    <div class="modal-actions">
+      <button class="btn accept" id="confirmMemberPicker">選択を確定</button>
+      <button class="btn reject" id="closeMemberPicker">キャンセル</button>
     </div>
   </div>
 </div>
@@ -2210,75 +2380,289 @@
   let weekOffset = 0;
   let monthOffset = 0;
 
+  // ===== メンバー（Googleワークスペースの同僚）ごとの予定（デモ用ダミーデータ） =====
+  // ディレクトリ（Googleアカウントをキーにした候補一覧／表示追加・共有の候補元）
+  const DIRECTORY = [
+    { id: 'me',        name: '田中太郎（自分）', email: 'tanaka.taro@musubona.example.com',       color: '#2E7D32' },
+    { id: 'suzuki',    name: '鈴木花子',         email: 'suzuki.hanako@musubona.example.com',     color: '#c0392b' },
+    { id: 'sato',      name: '佐藤次郎',         email: 'sato.jiro@musubona.example.com',         color: '#333333' },
+    { id: 'yamamoto',  name: '山本恵子',         email: 'yamamoto.keiko@musubona.example.com',    color: '#1565c0' },
+    { id: 'kobayashi', name: '小林健一',         email: 'kobayashi.kenichi@musubona.example.com', color: '#8e44ad' },
+    { id: 'ito',       name: '伊藤真由美',       email: 'ito.mayumi@musubona.example.com',        color: '#e67e22' }
+  ];
+  // 現在ホームに表示中のメンバー（初期は自分・鈴木・佐藤の3名／「＋追加」で候補から増やせる）
+  const MEMBERS = DIRECTORY.filter(m => ['me', 'suzuki', 'sato'].includes(m.id));
+  let selectedMemberIds = new Set(MEMBERS.map(m => m.id)); // 初期状態は全員表示
+
   // 曜日ごとの予定（週表示デモ用／土曜＝本日は日表示と同じ予定）
-  const weekEventsByDow = {
-    0: [
-      { time: '09:00-09:30', name: 'B興産 来訪対応', sub: 'Googleカレンダー登録済み', loc: '東京都新宿区〇〇1-2-3', memo: '納品物の確認と次回契約内容のご相談。' },
-      { time: '11:00-11:45', name: '山田太郎 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都中野区〇〇4-5-6', memo: '定期モニタリング。体調・生活状況のヒアリング。' },
-      { time: '15:00-15:30', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }
-    ],
-    1: [
-      { time: '10:00-10:30', name: 'C商店 契約更新の確認', sub: 'Googleカレンダー登録済み', loc: '東京都渋谷区〇〇7-8-9', memo: '契約更新の意向確認と条件のすり合わせ。' },
-      { time: '13:00-15:00', name: '空き時間（2時間）', free: true },
-      { time: '16:00-16:30', name: '有限会社さくら介護 新規営業', sub: 'Googleカレンダー登録済み', loc: '東京都杉並区〇〇1-1-1', memo: '新規サービス案内。パンフレット持参。' }
-    ],
-    2: [
-      { time: '14:00-14:45', name: '株式会社サンプル商事 定期訪問', sub: 'Googleカレンダー登録済み', loc: '東京都千代田区〇〇2-2-2', memo: '定期訪問。利用状況のヒアリングと追加提案。' }
-    ],
-    3: [
-      { time: '09:30-10:00', name: 'D社 見積りフォロー電話', sub: 'Googleカレンダー登録済み', loc: '（電話）', memo: '先方送付済みの見積りについてフォロー連絡。' },
-      { time: '13:30-14:15', name: '中村一郎 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都豊島区〇〇3-3-3', memo: '定期モニタリング。ご家族への状況共有も予定。' }
-    ],
-    4: [
-      { time: '09:00-09:45', name: '有限会社みらい工業 新規営業', sub: 'Googleカレンダー登録済み', loc: '東京都北区〇〇4-4-4', memo: '新規開拓先。初回訪問、ヒアリング中心。' },
-      { time: '11:00-11:30', name: '田中花子 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都板橋区〇〇5-5-5', memo: '定期モニタリング。' },
-      { time: '16:00-17:00', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }
-    ],
-    5: [
-      { time: '08:30-09:00', name: '事業所 → A商事 へ移動', sub: '移動時間 約30分', loc: '移動中', memo: '事業所からA商事への移動時間。' },
-      { time: '09:00-10:00', name: 'A商事 定期訪問', sub: 'Googleカレンダー登録済み', loc: '東京都港区〇〇1-2-3', memo: '定期訪問。前回契約の利用状況ヒアリングと追加提案。' },
-      { time: '10:15-11:00', name: 'B興産 新規商談', sub: 'Googleカレンダー登録済み', loc: '東京都品川区〇〇4-5-6', memo: '新規商談。見積り提示予定。' },
-      { time: '11:15-11:45', name: '鈴木次郎 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都目黒区〇〇7-8-9', memo: '定期モニタリング。ご家族への訪問報告も予定。' },
-      { time: '12:00-13:00', name: '休憩（昼食）', sub: 'Googleカレンダー登録済み', loc: '', memo: '' },
-      { time: '13:00-15:00', name: '空き時間（2時間）', free: true, sub: '渋谷区周辺' },
-      { time: '15:15-15:45', name: 'C商店 契約更新の確認', sub: 'Googleカレンダー登録済み', loc: '東京都渋谷区〇〇7-8-9', memo: '契約更新の意向確認と条件のすり合わせ。' },
-      { time: '16:00-17:00', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' },
-      { time: '17:15-17:30', name: 'D社 見積りフォロー電話', sub: 'Googleカレンダー登録済み', loc: '（電話）', memo: '先方送付済みの見積りについてフォロー連絡。' }
-    ],
-    6: []
+  const memberEventsByDow = {
+    me: {
+      0: [
+        { time: '09:00-09:30', name: 'B興産 来訪対応', sub: 'Googleカレンダー登録済み', loc: '東京都新宿区〇〇1-2-3', memo: '納品物の確認と次回契約内容のご相談。' },
+        { time: '11:00-11:45', name: '山田太郎 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都中野区〇〇4-5-6', memo: '定期モニタリング。体調・生活状況のヒアリング。' },
+        { time: '15:00-15:30', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }
+      ],
+      1: [
+        { time: '10:00-10:30', name: 'C商店 契約更新の確認', sub: 'Googleカレンダー登録済み', loc: '東京都渋谷区〇〇7-8-9', memo: '契約更新の意向確認と条件のすり合わせ。' },
+        { time: '13:00-15:00', name: '空き時間（2時間）', free: true },
+        { time: '16:00-16:30', name: '有限会社さくら介護 新規営業', sub: 'Googleカレンダー登録済み', loc: '東京都杉並区〇〇1-1-1', memo: '新規サービス案内。パンフレット持参。' }
+      ],
+      2: [
+        { time: '14:00-14:45', name: '株式会社サンプル商事 定期訪問', sub: 'Googleカレンダー登録済み', loc: '東京都千代田区〇〇2-2-2', memo: '定期訪問。利用状況のヒアリングと追加提案。' }
+      ],
+      3: [
+        { time: '09:30-10:00', name: 'D社 見積りフォロー電話', sub: 'Googleカレンダー登録済み', loc: '（電話）', memo: '先方送付済みの見積りについてフォロー連絡。' },
+        { time: '13:30-14:15', name: '中村一郎 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都豊島区〇〇3-3-3', memo: '定期モニタリング。ご家族への状況共有も予定。' }
+      ],
+      4: [
+        { time: '09:00-09:45', name: '有限会社みらい工業 新規営業', sub: 'Googleカレンダー登録済み', loc: '東京都北区〇〇4-4-4', memo: '新規開拓先。初回訪問、ヒアリング中心。' },
+        { time: '11:00-11:30', name: '田中花子 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都板橋区〇〇5-5-5', memo: '定期モニタリング。' },
+        { time: '16:00-17:00', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }
+      ],
+      5: [
+        { time: '08:30-09:00', name: '事業所 → A商事 へ移動', sub: '移動時間 約30分', loc: '移動中', memo: '事業所からA商事への移動時間。' },
+        { time: '09:00-10:00', name: 'A商事 定期訪問', sub: 'Googleカレンダー登録済み', loc: '東京都港区〇〇1-2-3', memo: '定期訪問。前回契約の利用状況ヒアリングと追加提案。' },
+        { time: '10:15-11:00', name: 'B興産 新規商談', sub: 'Googleカレンダー登録済み', loc: '東京都品川区〇〇4-5-6', memo: '新規商談。見積り提示予定。' },
+        { time: '11:15-11:45', name: '鈴木次郎 様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都目黒区〇〇7-8-9', memo: '定期モニタリング。ご家族への訪問報告も予定。' },
+        { time: '12:00-13:00', name: '休憩（昼食）', sub: 'Googleカレンダー登録済み', loc: '', memo: '' },
+        { time: '13:00-15:00', name: '空き時間（2時間）', free: true, sub: '渋谷区周辺' },
+        { time: '15:15-15:45', name: 'C商店 契約更新の確認', sub: 'Googleカレンダー登録済み', loc: '東京都渋谷区〇〇7-8-9', memo: '契約更新の意向確認と条件のすり合わせ。' },
+        { time: '16:00-17:00', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' },
+        { time: '17:15-17:30', name: 'D社 見積りフォロー電話', sub: 'Googleカレンダー登録済み', loc: '（電話）', memo: '先方送付済みの見積りについてフォロー連絡。' }
+      ],
+      6: []
+    },
+    suzuki: {
+      0: [{ time: '10:00-10:45', name: '中野様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都中野区〇〇2-3-4', memo: '定期モニタリング。' }],
+      1: [],
+      2: [{ time: '13:00-13:45', name: '△△工務店 定期訪問', sub: 'Googleカレンダー登録済み', loc: '東京都杉並区〇〇5-6-7', memo: '定期訪問。' }],
+      3: [{ time: '10:30-11:00', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }],
+      4: [{ time: '09:30-10:15', name: '□□商事 見積り提出', sub: 'Googleカレンダー登録済み', loc: '東京都豊島区〇〇1-2-3', memo: '見積り内容の説明と条件交渉。' }],
+      5: [{ time: '11:00-11:30', name: '高橋様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都練馬区〇〇8-9-10', memo: '定期モニタリング。' }],
+      6: []
+    },
+    sato: {
+      0: [],
+      1: [{ time: '09:00-09:30', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }],
+      2: [],
+      3: [{ time: '14:00-14:45', name: '渡辺様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都文京区〇〇2-2-2', memo: '定期モニタリング。' }],
+      4: [{ time: '11:00-11:30', name: '◇◇産業 契約更新', sub: 'Googleカレンダー登録済み', loc: '東京都台東区〇〇3-3-3', memo: '契約更新の意向確認。' }],
+      5: [{ time: '10:00-10:30', name: '☆☆株式会社 新規営業', sub: 'Googleカレンダー登録済み', loc: '東京都墨田区〇〇4-4-4', memo: '新規開拓先。初回訪問。' }],
+      6: []
+    },
+    yamamoto: {
+      0: [{ time: '09:00-09:30', name: '関口様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都新宿区〇〇9-9-9', memo: '定期モニタリング。' }],
+      1: [],
+      2: [{ time: '10:30-11:15', name: '〇〇興業 新規営業', sub: 'Googleカレンダー登録済み', loc: '東京都荒川区〇〇1-1-1', memo: '新規開拓先。初回訪問。' }],
+      3: [],
+      4: [{ time: '13:00-13:30', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }],
+      5: [],
+      6: []
+    },
+    kobayashi: {
+      0: [],
+      1: [{ time: '11:00-11:45', name: '△△商店 契約更新の確認', sub: 'Googleカレンダー登録済み', loc: '東京都足立区〇〇2-2-2', memo: '契約更新の意向確認。' }],
+      2: [],
+      3: [{ time: '09:00-09:30', name: '社内ミーティング', sub: 'Googleカレンダー登録済み', loc: '事業所 会議室A', memo: '週次の営業進捗共有ミーティング。' }],
+      4: [],
+      5: [{ time: '14:00-14:30', name: '木村様 モニタリング訪問', sub: 'Googleカレンダー登録済み／個人', loc: '東京都葛飾区〇〇3-3-3', memo: '定期モニタリング。' }],
+      6: []
+    },
+    ito: { 0: [], 1: [], 2: [], 3: [], 4: [], 5: [], 6: [] }
   };
   let dayDate = new Date(TODAY);
   function dowIndex(d) { return (d.getDay() + 6) % 7; }
 
-  // ===== 予定詳細（タップしたスケジュールの内容を確認・編集） =====
-  function setScheduleDataset(item, ev) {
+  // ===== メンバー選択チップ =====
+  const memberSelectEl = document.getElementById('memberSelect');
+  function renderMemberSelect() {
+    memberSelectEl.innerHTML = '';
+    MEMBERS.filter(member => member.id !== 'me').forEach(member => {
+      const selected = selectedMemberIds.has(member.id);
+      const chip = document.createElement('button');
+      chip.className = 'member-chip';
+      chip.style.borderColor = selected ? member.color : '#dadce0';
+      chip.style.color = selected ? member.color : '#5f6368';
+      chip.style.opacity = selected ? '1' : '.55';
+      chip.innerHTML = '<span class="dot" style="background:' + member.color + '"></span>' + member.name +
+        '<span class="member-chip-remove" title="表示から削除">×</span>';
+      chip.addEventListener('click', (e) => {
+        if (e.target.closest('.member-chip-remove')) {
+          if (confirm(member.name + 'を表示から削除しますか？')) {
+            MEMBERS.splice(MEMBERS.findIndex(m => m.id === member.id), 1);
+            selectedMemberIds.delete(member.id);
+            renderMemberSelect();
+            renderHomeDate();
+          }
+          return;
+        }
+        if (selectedMemberIds.has(member.id)) selectedMemberIds.delete(member.id);
+        else selectedMemberIds.add(member.id);
+        renderMemberSelect();
+        renderHomeDate();
+      });
+      memberSelectEl.appendChild(chip);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'member-add-btn';
+    addBtn.textContent = '＋ 追加';
+    addBtn.addEventListener('click', () => openMemberPicker('view'));
+    memberSelectEl.appendChild(addBtn);
+  }
+
+  // ===== メンバー追加／共有 共通ピッカー =====
+  const memberPickerModal = document.getElementById('memberPickerModal');
+  const memberPickerTitle = document.getElementById('memberPickerTitle');
+  const memberPickerList = document.getElementById('memberPickerList');
+  let pickerMode = null; // 'view' | 'scheduleAdd' | 'scheduleDetail' | 'taskAdd' | 'taskDetail'
+  let pickerTempSelection = new Set();
+  const shareSelections = { scheduleAdd: new Set(), scheduleDetail: new Set(), taskAdd: new Set(), taskDetail: new Set() };
+  const SHARE_CHIP_CONTAINER_IDS = {
+    scheduleAdd: 'scheduleAddShareChips',
+    scheduleDetail: 'scheduleDetailShareChips',
+    taskAdd: 'taskAddShareChips',
+    taskDetail: 'taskDetailShareChips'
+  };
+  const PICKER_TITLES = {
+    view: 'メンバーを追加',
+    scheduleAdd: 'メンバーに共有',
+    scheduleDetail: 'メンバーに共有',
+    taskAdd: 'メンバーに共有',
+    taskDetail: 'メンバーに共有'
+  };
+
+  function openMemberPicker(mode) {
+    pickerMode = mode;
+    pickerTempSelection = mode === 'view' ? new Set() : new Set(shareSelections[mode]);
+    memberPickerTitle.textContent = PICKER_TITLES[mode];
+    renderMemberPickerList();
+    memberPickerModal.classList.add('active');
+  }
+  function renderMemberPickerList() {
+    memberPickerList.innerHTML = '';
+    const candidates = pickerMode === 'view'
+      ? DIRECTORY.filter(m => !MEMBERS.some(mm => mm.id === m.id))
+      : DIRECTORY.filter(m => m.id !== 'me');
+    if (candidates.length === 0) {
+      memberPickerList.innerHTML = '<div class="member-picker-empty">候補がいません</div>';
+      return;
+    }
+    candidates.forEach(m => {
+      const row = document.createElement('label');
+      row.className = 'member-picker-row';
+      const checked = pickerTempSelection.has(m.id);
+      row.innerHTML = '<input type="checkbox"' + (checked ? ' checked' : '') + '>' +
+        '<span class="dot" style="background:' + m.color + '"></span>' +
+        '<span class="member-picker-info">' +
+          '<span class="member-picker-name">' + m.name + '</span>' +
+          '<span class="member-picker-email">' + m.email + '</span>' +
+        '</span>';
+      row.querySelector('input').addEventListener('change', e => {
+        if (e.target.checked) pickerTempSelection.add(m.id);
+        else pickerTempSelection.delete(m.id);
+      });
+      memberPickerList.appendChild(row);
+    });
+  }
+  document.getElementById('closeMemberPicker').addEventListener('click', () => {
+    memberPickerModal.classList.remove('active');
+  });
+  document.getElementById('confirmMemberPicker').addEventListener('click', () => {
+    if (pickerMode === 'view') {
+      pickerTempSelection.forEach(id => {
+        if (!MEMBERS.some(mm => mm.id === id)) {
+          const m = DIRECTORY.find(d => d.id === id);
+          if (m) { MEMBERS.push(m); selectedMemberIds.add(id); }
+        }
+      });
+      renderMemberSelect();
+      renderHomeDate();
+    } else {
+      shareSelections[pickerMode] = new Set(pickerTempSelection);
+      renderShareChips(pickerMode);
+    }
+    memberPickerModal.classList.remove('active');
+  });
+
+  function renderShareChips(mode) {
+    const container = document.getElementById(SHARE_CHIP_CONTAINER_IDS[mode]);
+    if (!container) return;
+    container.innerHTML = '';
+    DIRECTORY.filter(m => shareSelections[mode].has(m.id)).forEach(m => {
+      const chip = document.createElement('span');
+      chip.className = 'share-chip';
+      chip.style.borderColor = m.color;
+      chip.style.color = m.color;
+      chip.innerHTML = '<span class="dot" style="background:' + m.color + '"></span>' + m.name;
+      container.appendChild(chip);
+    });
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'share-add-btn';
+    addBtn.textContent = '＋ メンバーに共有';
+    addBtn.addEventListener('click', () => openMemberPicker(mode));
+    container.appendChild(addBtn);
+  }
+  ['scheduleAdd', 'scheduleDetail', 'taskAdd', 'taskDetail'].forEach(renderShareChips);
+
+  // ===== 予定詳細（タップしたスケジュールの内容を確認・編集／他者の予定は閲覧のみ） =====
+  function setScheduleDataset(item, ev, ownerId) {
     item.dataset.name = ev.name;
     item.dataset.time = ev.time;
     item.dataset.loc = ev.loc || '';
     item.dataset.memo = ev.memo || '';
+    item.dataset.owner = ownerId;
+  }
+  function buildTimelineItem(ev, member) {
+    const item = document.createElement('div');
+    item.className = 'timeline-item' + (ev.free ? ' free' : '');
+    item.style.setProperty('--dot-color', member.color);
+    const isMe = member.id === 'me';
+    item.innerHTML = '<div class="timeline-time">' + ev.time.replace('-', '<br>-') + '</div>' +
+      '<div class="timeline-body"><div class="name">' + ev.name + '</div>' +
+      (ev.sub ? '<div class="sub">' + ev.sub + '</div>' : '') + '</div>' +
+      (ev.free
+        ? (isMe ? '<button class="goto-ai-btn" data-screen="ai">🤖 AI提案を見る</button>' : '')
+        : (isMe ? '<button class="delete-x" data-confirm="「' + ev.name + '」を削除しますか？">✕</button>' : ''));
+    if (!ev.free) setScheduleDataset(item, ev, member.id);
+    return item;
   }
   const scheduleDetailModal = document.getElementById('scheduleDetailModal');
+  const scheduleDetailTitle = document.getElementById('scheduleDetailTitle');
   const detailTitleInput = document.getElementById('detailTitleInput');
   const detailTimeStartInput = document.getElementById('detailTimeStartInput');
   const detailTimeEndInput = document.getElementById('detailTimeEndInput');
   const detailLocInput = document.getElementById('detailLocInput');
   const detailMemoInput = document.getElementById('detailMemoInput');
+  const saveScheduleDetailBtn = document.getElementById('saveScheduleDetail');
+  const scheduleDetailShareSection = document.getElementById('scheduleDetailShareSection');
   let detailItem = null;
   function openScheduleDetail(item) {
     detailItem = item;
+    const isOwn = item.dataset.owner === 'me';
     const [start, end] = item.dataset.time.split('-');
     detailTitleInput.value = item.dataset.name;
     detailTimeStartInput.value = start || '';
     detailTimeEndInput.value = end || '';
     detailLocInput.value = item.dataset.loc || '';
     detailMemoInput.value = item.dataset.memo || '';
+
+    [detailTitleInput, detailTimeStartInput, detailTimeEndInput, detailLocInput, detailMemoInput].forEach(el => {
+      el.disabled = !isOwn;
+    });
+    saveScheduleDetailBtn.hidden = !isOwn;
+    scheduleDetailShareSection.style.display = isOwn ? '' : 'none';
+    scheduleDetailTitle.textContent = isOwn ? '予定を編集' : '予定の詳細（閲覧のみ）';
+    if (isOwn) { shareSelections.scheduleDetail = new Set(); renderShareChips('scheduleDetail'); }
+
     scheduleDetailModal.classList.add('active');
   }
   document.getElementById('closeScheduleDetail').addEventListener('click', () => {
     scheduleDetailModal.classList.remove('active');
   });
-  document.getElementById('saveScheduleDetail').addEventListener('click', () => {
-    if (!detailItem) return;
+  saveScheduleDetailBtn.addEventListener('click', () => {
+    if (!detailItem || detailItem.dataset.owner !== 'me') return;
     const name = detailTitleInput.value.trim() || detailItem.dataset.name;
     const start = detailTimeStartInput.value;
     const end = detailTimeEndInput.value;
@@ -2303,25 +2687,26 @@
   function renderDay() {
     const dow = dowIndex(dayDate);
     dayList.innerHTML = '';
-    const events = weekEventsByDow[dow] || [];
-    if (events.length === 0) {
-      const empty = document.createElement('div');
-      empty.className = 'week-day-empty';
-      empty.textContent = '予定なし';
-      dayList.appendChild(empty);
-    } else {
-      events.forEach(ev => {
-        const item = document.createElement('div');
-        item.className = 'timeline-item' + (ev.free ? ' free' : '');
-        item.innerHTML = '<div class="timeline-time">' + ev.time.replace('-', '<br>-') + '</div>' +
-          '<div class="timeline-body"><div class="name">' + ev.name + '</div>' +
-          (ev.sub ? '<div class="sub">' + ev.sub + '</div>' : '') + '</div>' +
-          (ev.free ? '<button class="goto-ai-btn" data-screen="ai">🤖 AI提案を見る</button>'
-                   : '<button class="delete-x" data-confirm="「' + ev.name + '」を削除しますか？">✕</button>');
-        if (!ev.free) setScheduleDataset(item, ev);
-        dayList.appendChild(item);
-      });
-    }
+    const members = MEMBERS.filter(m => selectedMemberIds.has(m.id));
+    members.forEach(member => {
+      const section = document.createElement('div');
+      section.className = 'member-section';
+      const head = document.createElement('div');
+      head.className = 'member-section-head';
+      head.innerHTML = '<span class="dot" style="background:' + member.color + '"></span>' + member.name;
+      section.appendChild(head);
+
+      const events = (memberEventsByDow[member.id] || {})[dow] || [];
+      if (events.length === 0) {
+        const empty = document.createElement('div');
+        empty.className = 'week-day-empty';
+        empty.textContent = '予定なし';
+        section.appendChild(empty);
+      } else {
+        events.forEach(ev => section.appendChild(buildTimelineItem(ev, member)));
+      }
+      dayList.appendChild(section);
+    });
     homeDateLabel.textContent = '📅 ' + fmtYMD(dayDate) + '（' + DOW_LABELS[dow] + '）';
   }
   dayList.addEventListener('click', e => {
@@ -2338,66 +2723,70 @@
     monday.setDate(monday.getDate() + weekOffset * 7);
     const weekList = document.getElementById('weekList');
     weekList.innerHTML = '';
-    for (let i = 0; i < 7; i++) {
-      const d = new Date(monday);
-      d.setDate(d.getDate() + i);
-      const block = document.createElement('div');
-      block.className = 'week-day-block';
-      const isToday = isSameDate(d, TODAY);
+    const members = MEMBERS.filter(m => selectedMemberIds.has(m.id));
+    members.forEach(member => {
+      const section = document.createElement('div');
+      section.className = 'member-section';
       const head = document.createElement('div');
-      head.className = 'week-day-head' + (isToday ? ' today' : '');
-      head.textContent = DOW_LABELS[i] + ' ' + fmtMD(d) + (isToday ? '（本日）' : '');
-      block.appendChild(head);
-      const events = weekEventsByDow[i] || [];
-      if (events.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'week-day-empty';
-        empty.textContent = '予定なし';
-        block.appendChild(empty);
-      } else {
-        events.forEach(ev => {
-          const item = document.createElement('div');
-          item.className = 'timeline-item' + (ev.free ? ' free' : '');
-          item.innerHTML = '<div class="timeline-time">' + ev.time.replace('-', '<br>-') + '</div>' +
-            '<div class="timeline-body"><div class="name">' + ev.name + '</div></div>' +
-            (ev.free ? '<button class="goto-ai-btn" data-screen="ai">🤖 AI提案を見る</button>' : '');
-          if (!ev.free) setScheduleDataset(item, ev);
-          block.appendChild(item);
-        });
+      head.className = 'member-section-head';
+      head.innerHTML = '<span class="dot" style="background:' + member.color + '"></span>' + member.name;
+      section.appendChild(head);
+
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(monday);
+        d.setDate(d.getDate() + i);
+        const block = document.createElement('div');
+        block.className = 'week-day-block';
+        const isToday = isSameDate(d, TODAY);
+        const dayHead = document.createElement('div');
+        dayHead.className = 'week-day-head' + (isToday ? ' today' : '');
+        dayHead.textContent = DOW_LABELS[i] + ' ' + fmtMD(d) + (isToday ? '（本日）' : '');
+        block.appendChild(dayHead);
+
+        const events = (memberEventsByDow[member.id] || {})[i] || [];
+        if (events.length === 0) {
+          const empty = document.createElement('div');
+          empty.className = 'week-day-empty';
+          empty.textContent = '予定なし';
+          block.appendChild(empty);
+        } else {
+          events.forEach(ev => block.appendChild(buildTimelineItem(ev, member)));
+        }
+        section.appendChild(block);
       }
-      weekList.appendChild(block);
-    }
+      weekList.appendChild(section);
+    });
     const sunday = new Date(monday);
     sunday.setDate(sunday.getDate() + 6);
     homeDateLabel.textContent = '📅 ' + fmtYMD(monday) + '～' + fmtYMD(sunday);
   }
   document.getElementById('weekList').addEventListener('click', e => {
-    const btn = e.target.closest('.goto-ai-btn');
-    if (btn) { goToScreen(btn.dataset.screen); return; }
+    const gotoBtn = e.target.closest('.goto-ai-btn');
+    if (gotoBtn) { goToScreen(gotoBtn.dataset.screen); return; }
+    const delBtn = e.target.closest('.delete-x');
+    if (delBtn) { if (confirm(delBtn.dataset.confirm || '削除しますか？')) delBtn.closest('.timeline-item').remove(); return; }
     const item = e.target.closest('.timeline-item');
     if (item && !item.classList.contains('free')) openScheduleDetail(item);
   });
 
-  // 月表示の簡易カレンダー生成（ダミー）
+  // 月表示の簡易カレンダー生成（選択中メンバーごとに色分けしたドットで予定の有無を表現）
   const monthGrid = document.getElementById('monthGrid');
-  const eventDayCounts = {
-    1: 2, 2: 1, 3: 3, 4: 1, 5: 2, 8: 2, 9: 3, 10: 1, 11: 2,
-    12: 1, 15: 3, 16: 1, 17: 2, 18: 1, 19: 2, 22: 1, 23: 3,
-    24: 2, 25: 1, 26: 2, 27: 4, 28: 2, 29: 1
-  };
   function renderMonth() {
     const target = new Date(TODAY.getFullYear(), TODAY.getMonth() + monthOffset, 1);
     const year = target.getFullYear();
     const month = target.getMonth();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     monthGrid.innerHTML = '';
+    const members = MEMBERS.filter(m => selectedMemberIds.has(m.id));
     for (let d = 1; d <= daysInMonth; d++) {
+      const date = new Date(year, month, d);
+      const dow = dowIndex(date);
       const cell = document.createElement('div');
       const isToday = monthOffset === 0 && d === TODAY.getDate();
       cell.className = 'month-cell' + (isToday ? ' today' : '');
-      const count = eventDayCounts[d] || 0;
-      const dots = '<span></span>'.repeat(Math.min(count, 4));
-      cell.innerHTML = d + (count ? '<div class="dots">' + dots + '</div>' : '');
+      const dotMembers = members.filter(m => ((memberEventsByDow[m.id] || {})[dow] || []).some(ev => !ev.free));
+      const dots = dotMembers.slice(0, 4).map(m => '<span style="background:' + m.color + '"></span>').join('');
+      cell.innerHTML = d + (dotMembers.length ? '<div class="dots">' + dots + '</div>' : '');
       cell.addEventListener('click', () => { dayDate = new Date(year, month, d); activateView('day'); });
       monthGrid.appendChild(cell);
     }
@@ -2437,6 +2826,7 @@
     else if (currentView === 'month') { monthOffset++; renderMonth(); }
   });
 
+  renderMemberSelect();
   renderHomeDate();
 
   // ===== AI提案：日付指定（簡易デモ） =====
@@ -2675,8 +3065,12 @@
   document.getElementById('submitSchedule').addEventListener('click', () => {
     const timeStr = getHourStart() + ':' + getMinStart() + ' 〜 ' + getHourEnd() + ':' + getMinEnd();
     const dateStr = scheduleDate ? fmtDateSlash(scheduleDate) : '（日付未選択）';
+    const sharedNames = DIRECTORY.filter(m => shareSelections.scheduleAdd.has(m.id)).map(m => m.name);
     document.getElementById('addScheduleModal').classList.remove('active');
-    alert('予定を登録しました（モック）\n' + dateStr + '  ' + timeStr);
+    alert('予定を登録しました（モック）\n' + dateStr + '  ' + timeStr +
+      (sharedNames.length ? '\n共有先：' + sharedNames.join('、') : ''));
+    shareSelections.scheduleAdd = new Set();
+    renderShareChips('scheduleAdd');
   });
   // ===== タスク追加モーダル：ラベル選択 =====
   let selectedTaskLabel = '';
@@ -2968,6 +3362,8 @@
     document.querySelectorAll('#taskLabelSelect .task-label-opt').forEach(b => b.classList.remove('selected'));
     selectedTaskLabel = '';
     document.getElementById('addTaskModal').classList.remove('active');
+    shareSelections.taskAdd = new Set();
+    renderShareChips('taskAdd');
   });
 
   // ===== タスク完了チェック =====
@@ -3029,6 +3425,8 @@
     });
     selectedEditTaskLabel = currentLabel;
     taskDetailLabelSection.style.display = item.querySelector('.task-label') ? '' : 'none';
+    shareSelections.taskDetail = new Set();
+    renderShareChips('taskDetail');
 
     taskDetailModal.classList.add('active');
   }
