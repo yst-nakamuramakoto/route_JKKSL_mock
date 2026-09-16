@@ -389,8 +389,8 @@
   .grid-cols { display: flex; flex: 1; min-width: 0; }
   .grid-col {
     position: relative;
-    flex: 1 0 92px;
-    min-width: 92px;
+    flex: 1 1 0;
+    min-width: 44px;
     border-right: 1px solid #f1f3f4;
   }
   .grid-col:last-child { border-right: none; }
@@ -406,6 +406,8 @@
     border-bottom: 1px solid #e8eaed;
     background: #fafbfc;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     padding: 0 4px;
   }
   .grid-col-head.today { color: #1b5e20; }
