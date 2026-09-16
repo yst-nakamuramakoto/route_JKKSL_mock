@@ -357,6 +357,85 @@
     border-radius: 50%;
     flex-shrink: 0;
   }
+
+  /* ===== 時間軸グリッド（日／週表示：予定を重ねて表示） ===== */
+  .time-grid-wrap {
+    display: flex;
+    overflow-x: auto;
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+    background: #fff;
+    margin-bottom: 16px;
+    -webkit-overflow-scrolling: touch;
+  }
+  .time-col {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    flex-shrink: 0;
+    width: 40px;
+    background: #fff;
+    border-right: 1px solid #e8eaed;
+  }
+  .time-col .hour-label {
+    position: absolute;
+    left: 0; right: 4px;
+    transform: translateY(-50%);
+    font-size: 10px;
+    color: #9aa0a6;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .grid-cols { display: flex; flex: 1; min-width: 0; }
+  .grid-col {
+    position: relative;
+    flex: 1 0 92px;
+    min-width: 92px;
+    border-right: 1px solid #f1f3f4;
+  }
+  .grid-col:last-child { border-right: none; }
+  .grid-col-head {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    height: 36px;
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #3c4043;
+    border-bottom: 1px solid #e8eaed;
+    background: #fafbfc;
+    white-space: nowrap;
+    padding: 0 4px;
+  }
+  .grid-col-head.today { color: #1b5e20; }
+  .grid-col-head .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .grid-body { position: relative; }
+  .grid-hourline {
+    position: absolute;
+    left: 0; right: 0;
+    border-top: 1px solid #f1f3f4;
+  }
+  .grid-event {
+    position: absolute;
+    border-radius: 6px;
+    padding: 3px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.3;
+    overflow: hidden;
+    cursor: pointer;
+    touch-action: manipulation;
+    color: #fff;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+  }
+  .grid-event .t { font-size: 9px; font-weight: 500; opacity: .85; display: block; }
+  .grid-event.free {
+    background: repeating-linear-gradient(45deg, rgba(154,160,166,.14), rgba(154,160,166,.14) 4px, transparent 4px, transparent 8px);
+    border: 1.5px dashed #9aa0a6;
+    color: #5f6368;
+    box-shadow: none;
+  }
   .member-add-btn {
     display: flex;
     align-items: center;
@@ -1309,6 +1388,19 @@
     gap: 8px;
     margin-top: 16px;
   }
+  .detail-delete-link {
+    display: block;
+    width: 100%;
+    margin-top: 14px;
+    padding: 6px 0;
+    background: none;
+    border: none;
+    color: #c0392b;
+    font-size: 12.5px;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  .detail-delete-link[hidden] { display: none; }
 
   /* タスク追加モーダル：ラベル選択 */
   .task-label-select {
@@ -2268,6 +2360,7 @@
       <label>共有</label>
       <div class="share-chips" id="scheduleDetailShareChips"></div>
     </div>
+    <button type="button" class="detail-delete-link" id="deleteScheduleDetail" hidden>🗑 この予定を削除</button>
     <div class="modal-actions">
       <button class="btn accept" id="saveScheduleDetail">保存する</button>
       <button class="btn reject" id="closeScheduleDetail">キャンセル</button>
@@ -2615,20 +2708,91 @@
     item.dataset.memo = ev.memo || '';
     item.dataset.owner = ownerId;
   }
-  function buildTimelineItem(ev, member) {
-    const item = document.createElement('div');
-    item.className = 'timeline-item' + (ev.free ? ' free' : '');
-    item.style.setProperty('--dot-color', member.color);
-    const isMe = member.id === 'me';
-    item.innerHTML = '<div class="timeline-time">' + ev.time.replace('-', '<br>-') + '</div>' +
-      '<div class="timeline-body"><div class="name">' + ev.name + '</div>' +
-      (ev.sub ? '<div class="sub">' + ev.sub + '</div>' : '') + '</div>' +
-      (ev.free
-        ? (isMe ? '<button class="goto-ai-btn" data-screen="ai">🤖 AI提案を見る</button>' : '')
-        : (isMe ? '<button class="delete-x" data-confirm="「' + ev.name + '」を削除しますか？">✕</button>' : ''));
-    if (!ev.free) setScheduleDataset(item, ev, member.id);
-    return item;
+
+  // ===== 時間軸グリッド（日／週表示で複数メンバーの予定を重ねて表示） =====
+  const GRID_START_HOUR = 8;
+  const GRID_END_HOUR = 18;
+  const HOUR_PX = 76;
+  const GRID_HEIGHT = (GRID_END_HOUR - GRID_START_HOUR) * HOUR_PX;
+
+  function parseTimeRangeMinutes(str) {
+    const [s, e] = str.split('-');
+    const toMin = t => { const [h, m] = t.split(':').map(Number); return h * 60 + m; };
+    return { start: toMin(s), end: toMin(e) };
   }
+  // pairs: [{ev, member}] → 同じ時間帯が重なる予定を横に並べるためのトラック割り当て
+  function assignEventTracks(pairs) {
+    const withMin = pairs.map(p => {
+      const { start, end } = parseTimeRangeMinutes(p.ev.time);
+      return { ev: p.ev, member: p.member, start, end };
+    }).sort((a, b) => a.start - b.start);
+    const trackEnds = [];
+    withMin.forEach(item => {
+      let placed = false;
+      for (let i = 0; i < trackEnds.length; i++) {
+        if (trackEnds[i] <= item.start) { item.track = i; trackEnds[i] = item.end; placed = true; break; }
+      }
+      if (!placed) { item.track = trackEnds.length; trackEnds.push(item.end); }
+    });
+    const trackCount = trackEnds.length || 1;
+    return withMin.map(item => Object.assign(item, { trackCount }));
+  }
+  function buildTimeCol() {
+    const timeCol = document.createElement('div');
+    timeCol.className = 'time-col';
+    const head = document.createElement('div');
+    head.className = 'grid-col-head';
+    timeCol.appendChild(head);
+    const body = document.createElement('div');
+    body.className = 'grid-body';
+    body.style.height = GRID_HEIGHT + 'px';
+    for (let h = GRID_START_HOUR; h <= GRID_END_HOUR; h++) {
+      const lbl = document.createElement('div');
+      lbl.className = 'hour-label';
+      lbl.style.top = ((h - GRID_START_HOUR) * HOUR_PX) + 'px';
+      lbl.textContent = pad2(h) + ':00';
+      body.appendChild(lbl);
+    }
+    timeCol.appendChild(body);
+    return timeCol;
+  }
+  function buildGridBody(pairs) {
+    const body = document.createElement('div');
+    body.className = 'grid-body';
+    body.style.height = GRID_HEIGHT + 'px';
+    for (let h = GRID_START_HOUR; h <= GRID_END_HOUR; h++) {
+      const line = document.createElement('div');
+      line.className = 'grid-hourline';
+      line.style.top = ((h - GRID_START_HOUR) * HOUR_PX) + 'px';
+      body.appendChild(line);
+    }
+    assignEventTracks(pairs).forEach(item => body.appendChild(buildGridEvent(item)));
+    return body;
+  }
+  function buildGridEvent(item) {
+    const { ev, member, start, end, track, trackCount } = item;
+    const div = document.createElement('div');
+    const clampedStart = Math.max(start, GRID_START_HOUR * 60);
+    const clampedEnd = Math.min(Math.max(end, clampedStart + 15), GRID_END_HOUR * 60);
+    const top = (clampedStart - GRID_START_HOUR * 60) / 60 * HOUR_PX;
+    const height = Math.max(26, (clampedEnd - clampedStart) / 60 * HOUR_PX - 2);
+    const widthPct = 100 / trackCount;
+    div.className = 'grid-event' + (ev.free ? ' free' : '');
+    div.style.top = top + 'px';
+    div.style.height = height + 'px';
+    div.style.left = (track * widthPct) + '%';
+    div.style.width = 'calc(' + widthPct + '% - 2px)';
+    if (!ev.free) div.style.background = member.color;
+    div.innerHTML = '<span class="t">' + ev.time.replace('-', '〜') + '</span>' + ev.name;
+    const isMe = member.id === 'me';
+    if (!ev.free) setScheduleDataset(div, ev, member.id);
+    div.addEventListener('click', () => {
+      if (ev.free) { if (isMe) goToScreen('ai'); return; }
+      openScheduleDetail(div);
+    });
+    return div;
+  }
+
   const scheduleDetailModal = document.getElementById('scheduleDetailModal');
   const scheduleDetailTitle = document.getElementById('scheduleDetailTitle');
   const detailTitleInput = document.getElementById('detailTitleInput');
@@ -2637,6 +2801,7 @@
   const detailLocInput = document.getElementById('detailLocInput');
   const detailMemoInput = document.getElementById('detailMemoInput');
   const saveScheduleDetailBtn = document.getElementById('saveScheduleDetail');
+  const deleteScheduleDetailBtn = document.getElementById('deleteScheduleDetail');
   const scheduleDetailShareSection = document.getElementById('scheduleDetailShareSection');
   let detailItem = null;
   function openScheduleDetail(item) {
@@ -2653,6 +2818,7 @@
       el.disabled = !isOwn;
     });
     saveScheduleDetailBtn.hidden = !isOwn;
+    deleteScheduleDetailBtn.hidden = !isOwn;
     scheduleDetailShareSection.style.display = isOwn ? '' : 'none';
     scheduleDetailTitle.textContent = isOwn ? '予定を編集' : '予定の詳細（閲覧のみ）';
     if (isOwn) { shareSelections.scheduleDetail = new Set(); renderShareChips('scheduleDetail'); }
@@ -2661,6 +2827,13 @@
   }
   document.getElementById('closeScheduleDetail').addEventListener('click', () => {
     scheduleDetailModal.classList.remove('active');
+  });
+  deleteScheduleDetailBtn.addEventListener('click', () => {
+    if (!detailItem || detailItem.dataset.owner !== 'me') return;
+    if (confirm('「' + detailItem.dataset.name + '」を削除しますか？')) {
+      detailItem.remove();
+      scheduleDetailModal.classList.remove('active');
+    }
   });
   saveScheduleDetailBtn.addEventListener('click', () => {
     if (!detailItem || detailItem.dataset.owner !== 'me') return;
@@ -2675,11 +2848,7 @@
     detailItem.dataset.time = timeStr;
     detailItem.dataset.loc = loc;
     detailItem.dataset.memo = memo;
-
-    detailItem.querySelector('.timeline-body .name').textContent = name;
-    detailItem.querySelector('.timeline-time').innerHTML = timeStr.replace('-', '<br>-');
-    const delBtn = detailItem.querySelector('.delete-x');
-    if (delBtn) delBtn.dataset.confirm = '「' + name + '」を削除しますか？';
+    detailItem.innerHTML = '<span class="t">' + timeStr.replace('-', '〜') + '</span>' + name;
 
     scheduleDetailModal.classList.remove('active');
   });
@@ -2689,36 +2858,29 @@
     const dow = dowIndex(dayDate);
     dayList.innerHTML = '';
     const members = MEMBERS.filter(m => selectedMemberIds.has(m.id));
+
+    const wrap = document.createElement('div');
+    wrap.className = 'time-grid-wrap';
+    wrap.appendChild(buildTimeCol());
+
+    const colsWrap = document.createElement('div');
+    colsWrap.className = 'grid-cols';
     members.forEach(member => {
-      const section = document.createElement('div');
-      section.className = 'member-section';
+      const col = document.createElement('div');
+      col.className = 'grid-col';
       const head = document.createElement('div');
-      head.className = 'member-section-head';
-      head.style.borderBottomColor = member.color;
+      head.className = 'grid-col-head';
       head.innerHTML = '<span class="dot" style="background:' + member.color + '"></span>' + member.name;
-      section.appendChild(head);
+      col.appendChild(head);
 
       const events = (memberEventsByDow[member.id] || {})[dow] || [];
-      if (events.length === 0) {
-        const empty = document.createElement('div');
-        empty.className = 'week-day-empty';
-        empty.textContent = '予定なし';
-        section.appendChild(empty);
-      } else {
-        events.forEach(ev => section.appendChild(buildTimelineItem(ev, member)));
-      }
-      dayList.appendChild(section);
+      col.appendChild(buildGridBody(events.map(ev => ({ ev, member }))));
+      colsWrap.appendChild(col);
     });
+    wrap.appendChild(colsWrap);
+    dayList.appendChild(wrap);
     homeDateLabel.textContent = '📅 ' + fmtYMD(dayDate) + '（' + DOW_LABELS[dow] + '）';
   }
-  dayList.addEventListener('click', e => {
-    const gotoBtn = e.target.closest('.goto-ai-btn');
-    if (gotoBtn) { goToScreen(gotoBtn.dataset.screen); return; }
-    const delBtn = e.target.closest('.delete-x');
-    if (delBtn) { if (confirm(delBtn.dataset.confirm || '削除しますか？')) delBtn.closest('.timeline-item').remove(); return; }
-    const item = e.target.closest('.timeline-item');
-    if (item && !item.classList.contains('free')) openScheduleDetail(item);
-  });
 
   function renderWeek() {
     const monday = getMonday(TODAY);
@@ -2726,51 +2888,39 @@
     const weekList = document.getElementById('weekList');
     weekList.innerHTML = '';
     const members = MEMBERS.filter(m => selectedMemberIds.has(m.id));
-    members.forEach(member => {
-      const section = document.createElement('div');
-      section.className = 'member-section';
+
+    const wrap = document.createElement('div');
+    wrap.className = 'time-grid-wrap';
+    wrap.appendChild(buildTimeCol());
+
+    const colsWrap = document.createElement('div');
+    colsWrap.className = 'grid-cols';
+    for (let i = 0; i < 7; i++) {
+      const d = new Date(monday);
+      d.setDate(d.getDate() + i);
+      const isToday = isSameDate(d, TODAY);
+      const col = document.createElement('div');
+      col.className = 'grid-col';
       const head = document.createElement('div');
-      head.className = 'member-section-head';
-      head.style.borderBottomColor = member.color;
-      head.innerHTML = '<span class="dot" style="background:' + member.color + '"></span>' + member.name;
-      section.appendChild(head);
+      head.className = 'grid-col-head' + (isToday ? ' today' : '');
+      head.textContent = DOW_LABELS[i] + ' ' + fmtMD(d);
+      col.appendChild(head);
 
-      for (let i = 0; i < 7; i++) {
-        const d = new Date(monday);
-        d.setDate(d.getDate() + i);
-        const block = document.createElement('div');
-        block.className = 'week-day-block';
-        const isToday = isSameDate(d, TODAY);
-        const dayHead = document.createElement('div');
-        dayHead.className = 'week-day-head' + (isToday ? ' today' : '');
-        dayHead.textContent = DOW_LABELS[i] + ' ' + fmtMD(d) + (isToday ? '（本日）' : '');
-        block.appendChild(dayHead);
-
+      let pairs = [];
+      members.forEach(member => {
         const events = (memberEventsByDow[member.id] || {})[i] || [];
-        if (events.length === 0) {
-          const empty = document.createElement('div');
-          empty.className = 'week-day-empty';
-          empty.textContent = '予定なし';
-          block.appendChild(empty);
-        } else {
-          events.forEach(ev => block.appendChild(buildTimelineItem(ev, member)));
-        }
-        section.appendChild(block);
-      }
-      weekList.appendChild(section);
-    });
+        events.forEach(ev => pairs.push({ ev, member }));
+      });
+      col.appendChild(buildGridBody(pairs));
+      colsWrap.appendChild(col);
+    }
+    wrap.appendChild(colsWrap);
+    weekList.appendChild(wrap);
+
     const sunday = new Date(monday);
     sunday.setDate(sunday.getDate() + 6);
     homeDateLabel.textContent = '📅 ' + fmtYMD(monday) + '～' + fmtYMD(sunday);
   }
-  document.getElementById('weekList').addEventListener('click', e => {
-    const gotoBtn = e.target.closest('.goto-ai-btn');
-    if (gotoBtn) { goToScreen(gotoBtn.dataset.screen); return; }
-    const delBtn = e.target.closest('.delete-x');
-    if (delBtn) { if (confirm(delBtn.dataset.confirm || '削除しますか？')) delBtn.closest('.timeline-item').remove(); return; }
-    const item = e.target.closest('.timeline-item');
-    if (item && !item.classList.contains('free')) openScheduleDetail(item);
-  });
 
   // 月表示の簡易カレンダー生成（選択中メンバーごとに色分けしたドットで予定の有無を表現）
   const monthGrid = document.getElementById('monthGrid');
