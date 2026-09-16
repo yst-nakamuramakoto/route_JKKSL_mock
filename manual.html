@@ -1,0 +1,375 @@
+<title>MUSUBOなびゲート 取扱説明書</title>
+<style>
+  :root {
+    --bg: #f5f8f5;
+    --surface: #ffffff;
+    --surface-2: #eef3ee;
+    --ink: #1c261f;
+    --ink-muted: #5b6b60;
+    --ink-faint: #8a9690;
+    --border: #dbe5db;
+    --accent: #2e7d32;
+    --accent-bright: #4caf50;
+    --accent-wash: #e7f3e8;
+    --amber: #9a6400;
+    --amber-wash: #fbf1de;
+    --shadow: 0 1px 2px rgba(28,38,31,0.06), 0 4px 16px rgba(28,38,31,0.05);
+    --c-me: #2e7d32;
+    --c-a: #c0392b;
+    --c-b: #333333;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12180f;
+      --surface: #1a2318;
+      --surface-2: #202b1d;
+      --ink: #e7efe6;
+      --ink-muted: #a9b8a5;
+      --ink-faint: #78897a;
+      --border: #2c3a29;
+      --accent: #63c168;
+      --accent-bright: #7ed483;
+      --accent-wash: #1c2e1c;
+      --amber: #d9a54a;
+      --amber-wash: #332711;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12180f;
+    --surface: #1a2318;
+    --surface-2: #202b1d;
+    --ink: #e7efe6;
+    --ink-muted: #a9b8a5;
+    --ink-faint: #78897a;
+    --border: #2c3a29;
+    --accent: #63c168;
+    --accent-bright: #7ed483;
+    --accent-wash: #1c2e1c;
+    --amber: #d9a54a;
+    --amber-wash: #332711;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.75;
+  }
+  h1, h2, h3, .display {
+    font-family: "Zen Maru Gothic", "Hiragino Sans", sans-serif;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  code { font-family: "JetBrains Mono", ui-monospace, monospace; }
+  a { color: var(--accent); }
+
+  .wrap { max-width: 860px; margin: 0 auto; padding: 48px 24px 90px; }
+
+  /* ===== Header ===== */
+  header.top { margin-bottom: 34px; }
+  .brand-row { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; }
+  .brand-mark {
+    width: 40px; height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(155deg, var(--accent-bright), var(--accent));
+    flex-shrink: 0;
+  }
+  .brand-name { font-family: "Zen Maru Gothic", sans-serif; font-weight: 700; font-size: 16px; }
+  .brand-tag { font-size: 11px; color: var(--ink-faint); letter-spacing: 0.06em; }
+  .doc-kicker {
+    font-size: 12px; letter-spacing: 0.12em; color: var(--accent);
+    font-weight: 700; text-transform: uppercase; margin-bottom: 8px;
+  }
+  header.top h1 { font-size: 27px; margin: 0 0 10px; font-weight: 700; }
+  header.top .lede { color: var(--ink-muted); font-size: 15px; max-width: 62ch; margin: 0; }
+
+  /* ===== At-a-glance strip ===== */
+  .glance {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin: 28px 0 8px;
+  }
+  .glance .tile { background: var(--surface); padding: 16px 14px; }
+  .glance .tile .num { font-family: "Zen Maru Gothic", sans-serif; font-size: 20px; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .glance .tile .lbl { font-size: 11px; color: var(--ink-faint); margin-top: 4px; line-height: 1.5; }
+
+  section { margin-top: 40px; }
+  section > h2 { font-size: 19px; margin: 0 0 6px; }
+  .section-lede { color: var(--ink-muted); font-size: 13.5px; margin: 0 0 18px; max-width: 68ch; }
+
+  /* ===== Value tiles ===== */
+  .value-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .value-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 12px;
+    padding: 16px 18px; box-shadow: var(--shadow);
+  }
+  .value-card .icon { font-size: 20px; margin-bottom: 8px; display: block; }
+  .value-card h3 { font-size: 14.5px; margin: 0 0 5px; }
+  .value-card p { margin: 0; font-size: 13px; color: var(--ink-muted); }
+
+  /* ===== Daily flow ===== */
+  .flow { display: flex; flex-direction: column; border-left: 2px solid var(--border); margin-left: 13px; }
+  .flow-step { position: relative; padding: 0 0 26px 26px; }
+  .flow-step:last-child { padding-bottom: 2px; }
+  .flow-step::before {
+    content: attr(data-n);
+    position: absolute; left: -14px; top: 0;
+    width: 26px; height: 26px;
+    background: var(--accent); color: #fff;
+    border-radius: 50%;
+    font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Zen Maru Gothic", sans-serif;
+  }
+  .flow-step h4 { margin: 0 0 4px; font-size: 14.5px; }
+  .flow-step p { margin: 0; font-size: 13.5px; color: var(--ink-muted); }
+
+  /* ===== Screen guide ===== */
+  .screen-guide {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 14px;
+    padding: 26px 28px; margin-bottom: 18px; box-shadow: var(--shadow);
+  }
+  .screen-head { display: flex; align-items: center; gap: 12px; margin-bottom: 6px; }
+  .screen-icon {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: var(--accent-wash); color: var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .screen-head h3 { margin: 0; font-size: 17px; }
+  .screen-purpose { color: var(--ink-muted); font-size: 13.5px; margin: 0 0 16px; max-width: 66ch; }
+
+  .steps { list-style: none; margin: 0 0 14px; padding: 0; display: flex; flex-direction: column; gap: 9px; }
+  .steps li { display: flex; gap: 10px; font-size: 14px; }
+  .steps li .si {
+    flex-shrink: 0; width: 20px; height: 20px; border-radius: 6px;
+    background: var(--surface-2); color: var(--ink-muted);
+    font-size: 11px; font-weight: 700; display: flex; align-items: center; justify-content: center;
+    font-family: "JetBrains Mono", monospace; margin-top: 2px;
+  }
+
+  .note {
+    display: flex; gap: 8px; align-items: flex-start;
+    background: var(--amber-wash); color: var(--amber);
+    border-radius: 8px; padding: 9px 12px; font-size: 12.5px; margin-top: 10px;
+  }
+  .note b { color: inherit; }
+
+  /* ===== mini illustrations ===== */
+  .illust-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 16px; }
+  .mini-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    border: 1.5px solid var(--border); border-radius: 8px;
+    padding: 5px 10px; font-size: 11.5px; font-weight: 600; color: var(--ink-muted);
+  }
+  .mini-chip .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .mini-fab {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, var(--accent-bright), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    color: #fff; font-size: 18px; box-shadow: 0 3px 10px rgba(46,125,50,0.35);
+  }
+  .mini-bubble-row { display: flex; flex-direction: column; gap: 6px; max-width: 260px; }
+  .mini-bubble { padding: 7px 12px; border-radius: 14px; font-size: 12px; max-width: 82%; }
+  .mini-bubble.bot { background: var(--surface-2); align-self: flex-start; border-bottom-left-radius: 4px; }
+  .mini-bubble.user { background: var(--accent); color: #fff; align-self: flex-end; border-bottom-right-radius: 4px; }
+
+  footer.doc-foot {
+    margin-top: 50px; padding-top: 18px; border-top: 1px solid var(--border);
+    color: var(--ink-faint); font-size: 12px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+
+  @media (max-width: 640px) {
+    .glance { grid-template-columns: repeat(2, 1fr); }
+    .value-grid { grid-template-columns: 1fr; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand-row">
+      <div class="brand-mark"></div>
+      <div>
+        <div class="brand-name">MUSUBOなびゲート</div>
+        <div class="brand-tag">routesupport</div>
+      </div>
+    </div>
+    <div class="doc-kicker">取扱説明書</div>
+    <h1>MUSUBOなびゲートの使い方</h1>
+    <p class="lede">Googleカレンダーを起点に、営業訪問と既存利用者モニタリングの計画から実行までを1つのアプリで完結させる営業支援ツールです。本書は、全体像を知りたい方・実際に画面を操作する方の両方に向けたガイドです。</p>
+  </header>
+
+  <div class="glance">
+    <div class="tile"><div class="num">6+1</div><div class="lbl">画面数（6画面＋AIアシスタント）</div></div>
+    <div class="tile"><div class="num">1台</div><div class="lbl">スマートフォン1台で完結</div></div>
+    <div class="tile"><div class="num">0回</div><div class="lbl">個別ログイン不要（社内アカウントで利用）</div></div>
+    <div class="tile"><div class="num">Demo</div><div class="lbl">現在はモック段階（データはすべてダミー）</div></div>
+  </div>
+
+  <section id="value">
+    <h2>このアプリでできること</h2>
+    <p class="section-lede">Googleカレンダー・タスクを軸に、訪問営業に必要な「次どこへ行くか」「どう回るか」「滞在しすぎていないか」を一気通貫でサポートします。</p>
+    <div class="value-grid">
+      <div class="value-card">
+        <span class="icon">🏠</span>
+        <h3>スケジュールをひとつに</h3>
+        <p>自分の予定・タスクに加え、同僚のスケジュールも重ねて確認。チームの動きが一目で分かります。</p>
+      </div>
+      <div class="value-card">
+        <span class="icon">🤖</span>
+        <h3>空き時間にAIが提案</h3>
+        <p>予定と予定の間の空き時間に対し、訪問すべき先をAIが自動で提案します。</p>
+      </div>
+      <div class="value-card">
+        <span class="icon">🗺️</span>
+        <h3>ルートと駐車場を最適化</h3>
+        <p>複数の訪問先が決まったら、移動効率の良い順番と、各所の駐車場情報をまとめて確認できます。</p>
+      </div>
+      <div class="value-card">
+        <span class="icon">⏰</span>
+        <h3>滞在の長引きを防止</h3>
+        <p>訪問先への到着を検知して自動でカウント開始。長居しそうな時は自然な形で知らせてくれます。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="flow">
+    <h2>一日の流れ</h2>
+    <p class="section-lede">実際の利用シーンに沿った、朝から夕方までの標準的な使い方の流れです。</p>
+    <div class="flow">
+      <div class="flow-step" data-n="1">
+        <h4>出社時：ホームで予定とタスクを確認</h4>
+        <p>ホーム画面を開き、本日のスケジュールと「今日のタスク」に目を通す。</p>
+      </div>
+      <div class="flow-step" data-n="2">
+        <h4>空き時間があればAI提案を確認</h4>
+        <p>スケジュール上の空き時間カードから「🤖 AI提案を見る」をタップし、訪問候補を検討する。</p>
+      </div>
+      <div class="flow-step" data-n="3">
+        <h4>複数訪問が決まったらルート提案へ</h4>
+        <p>移動効率の良い巡回順と、各訪問先近くの駐車場をまとめて確認し、ルートを採用する。</p>
+      </div>
+      <div class="flow-step" data-n="4">
+        <h4>訪問先へ到着：滞在アラートが自動作動</h4>
+        <p>到着を検知した瞬間から滞在時間のカウントが始まる。長引くと着信風のアラートで知らせてくれる。</p>
+      </div>
+      <div class="flow-step" data-n="5">
+        <h4>移動中はAIアシスタントに話しかける</h4>
+        <p>運転中やフリック入力が難しい時は、マイクに話しかけるだけで予定登録やルート確認ができる。</p>
+      </div>
+      <div class="flow-step" data-n="6">
+        <h4>帰社後：タスクを完了チェック</h4>
+        <p>その日にやったことをタスク画面でチェック。翌日以降の分はそのまま残る。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="screens">
+    <h2>画面ごとの使い方</h2>
+    <p class="section-lede">実際に手を動かして操作する方向けの、画面別の手順です。</p>
+
+    <div class="screen-guide">
+      <div class="screen-head"><div class="screen-icon">🏠</div><h3>① ホーム</h3></div>
+      <p class="screen-purpose">スケジュールとタスクを管理する起点画面。日／週／月を切り替えながら、自分と同僚の予定を確認できます。</p>
+      <div class="illust-row">
+        <span class="mini-chip"><span class="dot" style="background:var(--c-a)"></span>鈴木花子</span>
+        <span class="mini-chip"><span class="dot" style="background:var(--c-b)"></span>佐藤次郎</span>
+        <span class="mini-chip" style="border-style:dashed;">＋ 追加</span>
+      </div>
+      <ol class="steps">
+        <li><span class="si">1</span>上部の「日／週／月」タブで表示単位を切り替える。</li>
+        <li><span class="si">2</span>タブ下のチップで、同僚の予定を重ねて表示するか選ぶ（自分の予定は常に表示）。「＋追加」で新しく候補メンバーを追加、チップの「×」で表示から外せる。</li>
+        <li><span class="si">3</span>予定・タスクをタップすると内容確認・編集ができる（同僚の予定は閲覧のみ）。</li>
+        <li><span class="si">4</span>画面右下のマスコットボタン（FAB）をタップすると、予定・タスク・AI提案の追加やAIアシスタントの呼び出しができる。</li>
+        <li><span class="si">5</span>上部の日付をタップするとカレンダーが開き、任意の日に移動できる。月表示では日付をタップして直接その日へ移動できる。</li>
+      </ol>
+      <div class="note">⚠ <span><b>ご注意：</b>現在はモックのため、予定・タスクの変更は画面上の表示のみに反映され、実際のGoogleカレンダーには書き込まれません。</span></div>
+    </div>
+
+    <div class="screen-guide">
+      <div class="screen-head"><div class="screen-icon">🤖</div><h3>② AI提案</h3></div>
+      <p class="screen-purpose">指定した日の空き時間に対して、訪問すべき先をAIが提案します。</p>
+      <ol class="steps">
+        <li><span class="si">1</span>上部の日付を前後に送るか、ミニカレンダーで確認したい日を選ぶ。</li>
+        <li><span class="si">2</span>時間帯ごとに並ぶ提案カードを確認する（顧客名・理由・優先度・所要時間）。</li>
+        <li><span class="si">3</span>「採用」でホームの予定に登録、「却下」で見送る。</li>
+      </ol>
+    </div>
+
+    <div class="screen-guide">
+      <div class="screen-head"><div class="screen-icon">✅</div><h3>③ タスク</h3></div>
+      <p class="screen-purpose">Googleカレンダーにはない「やることリスト」を、種別ラベルで分類して管理します。</p>
+      <ol class="steps">
+        <li><span class="si">1</span>上部のラベルフィルター（利用者／紹介先／市区町村／事務処理）で絞り込む。</li>
+        <li><span class="si">2</span>チェックボックスで完了・未完了を切り替え、タスクをタップすると内容や期限を編集できる。</li>
+        <li><span class="si">3</span>右上の「📊 ガントチャート」で、2週間分の期間を横棒グラフで俯瞰できる。</li>
+      </ol>
+    </div>
+
+    <div class="screen-guide">
+      <div class="screen-head"><div class="screen-icon">🗺️</div><h3>④ ルート提案</h3></div>
+      <p class="screen-purpose">複数の訪問先が決まった際に、効率の良い巡回順と駐車場をまとめて提案します。</p>
+      <ol class="steps">
+        <li><span class="si">1</span>提案されたルートを確認し、「このルートを採用する」または「別ルートを再提案」を選ぶ。</li>
+        <li><span class="si">2</span>各訪問先カードの「駐車場までナビ開始」で外部ナビへ連携する。</li>
+        <li><span class="si">3</span>駐車場が満車の場合は「他の駐車場を選ぶ」から⑤駐車場リストへ移動する。</li>
+      </ol>
+    </div>
+
+    <div class="screen-guide">
+      <div class="screen-head"><div class="screen-icon">🅿️</div><h3>⑤ 駐車場リスト</h3></div>
+      <p class="screen-purpose">特定の訪問先まわりの駐車場だけを単独で確認・比較したいときに使います。</p>
+      <ol class="steps">
+        <li><span class="si">1</span>上部のドロップダウンで訪問先を選ぶ。</li>
+        <li><span class="si">2</span>空車／満車・距離・料金の一覧から選び、ルートに追加する。</li>
+      </ol>
+    </div>
+
+    <div class="screen-guide">
+      <div class="screen-head"><div class="screen-icon">⏰</div><h3>⑥ 滞在アラート</h3></div>
+      <p class="screen-purpose">訪問先での滞在が長引いていないかを見守り、遅延を防ぎます。</p>
+      <ol class="steps">
+        <li><span class="si">1</span>訪問先に到着すると、GPSが自動で検知してカウントを開始する（操作不要）。</li>
+        <li><span class="si">2</span>残り10分で黄色、超過で赤の警告表示に変わる。</li>
+        <li><span class="si">3</span>実際に長引くと、着信のような全画面ポップアップ・着信音・バイブレーションで知らせる。「応答（退出）」「確認（続行）」のどちらかを選ぶ。</li>
+      </ol>
+      <div class="note">⚠ <span><b>ご注意：</b>「連絡が入ってきた」体裁の演出のため、周囲には自然な離席として見えます。</span></div>
+    </div>
+
+    <div class="screen-guide">
+      <div class="screen-head"><div class="screen-icon">🎙️</div><h3>⑦ AIアシスタント</h3></div>
+      <p class="screen-purpose">運転中やフリック入力が難しい時でも、話しかけるだけで主要な操作ができます。</p>
+      <div class="illust-row">
+        <div class="mini-bubble-row">
+          <div class="mini-bubble user">明日14時にA商事の訪問を追加して</div>
+          <div class="mini-bubble bot">承知しました。登録します。</div>
+        </div>
+        <div class="mini-fab">🎙️</div>
+      </div>
+      <ol class="steps">
+        <li><span class="si">1</span>ホーム画面のマスコットボタン（FAB）から「🎙️ AIと話す」を選ぶ。</li>
+        <li><span class="si">2</span>マイクボタンを押して話しかける、またはテキストで入力する。</li>
+        <li><span class="si">3</span>「予定を追加して」「◯◯さんのところに行きたい」「今日のスケジュールを教えて」など、話しかけた内容に応じて登録・画面遷移・回答が行われる。</li>
+      </ol>
+    </div>
+  </section>
+
+  <footer class="doc-foot">
+    <span>MUSUBOなびゲート routesupport — 取扱説明書</span>
+    <span>現在の状態：モック（デモ用・データはダミー）</span>
+  </footer>
+</div>

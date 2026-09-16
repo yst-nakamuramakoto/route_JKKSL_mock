@@ -1,0 +1,625 @@
+<title>MUSUBOなびゲート 仕様書</title>
+<style>
+  :root {
+    --bg: #f5f8f5;
+    --surface: #ffffff;
+    --surface-2: #eef3ee;
+    --ink: #1c261f;
+    --ink-muted: #5b6b60;
+    --ink-faint: #8a9690;
+    --border: #dbe5db;
+    --accent: #2e7d32;
+    --accent-bright: #4caf50;
+    --accent-wash: #e7f3e8;
+    --decided: #2e7d32;
+    --decided-wash: #e6f4ea;
+    --pending: #9a6400;
+    --pending-wash: #fbf1de;
+    --shadow: 0 1px 2px rgba(28,38,31,0.06), 0 4px 16px rgba(28,38,31,0.05);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12180f;
+      --surface: #1a2318;
+      --surface-2: #202b1d;
+      --ink: #e7efe6;
+      --ink-muted: #a9b8a5;
+      --ink-faint: #78897a;
+      --border: #2c3a29;
+      --accent: #63c168;
+      --accent-bright: #7ed483;
+      --accent-wash: #1c2e1c;
+      --decided: #63c168;
+      --decided-wash: #1c2e1c;
+      --pending: #d9a54a;
+      --pending-wash: #332711;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #12180f;
+    --surface: #1a2318;
+    --surface-2: #202b1d;
+    --ink: #e7efe6;
+    --ink-muted: #a9b8a5;
+    --ink-faint: #78897a;
+    --border: #2c3a29;
+    --accent: #63c168;
+    --accent-bright: #7ed483;
+    --accent-wash: #1c2e1c;
+    --decided: #63c168;
+    --decided-wash: #1c2e1c;
+    --pending: #d9a54a;
+    --pending-wash: #332711;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 4px 20px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html { color-scheme: light dark; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "Noto Sans JP", "Hiragino Sans", sans-serif;
+    font-size: 15.5px;
+    line-height: 1.75;
+  }
+  h1, h2, h3, .display {
+    font-family: "Zen Maru Gothic", "Hiragino Sans", sans-serif;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  code, .mono, .tag-id {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
+
+  a { color: var(--accent); }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 258px minmax(0, 1fr);
+    max-width: 1180px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+
+  /* ===== Sidebar ===== */
+  .toc {
+    position: sticky;
+    top: 0;
+    align-self: start;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 36px 20px 40px 28px;
+    border-right: 1px solid var(--border);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .brand-mark {
+    width: 34px; height: 34px;
+    border-radius: 10px;
+    background: linear-gradient(155deg, var(--accent-bright), var(--accent));
+    flex-shrink: 0;
+  }
+  .brand-name {
+    font-family: "Zen Maru Gothic", sans-serif;
+    font-weight: 700;
+    font-size: 15px;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+  .brand-tag {
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    margin: 2px 0 26px;
+    padding-left: 44px;
+  }
+  .toc-label {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.1em;
+    margin: 22px 0 8px;
+    text-transform: uppercase;
+  }
+  .toc nav { display: flex; flex-direction: column; gap: 1px; }
+  .toc a {
+    display: block;
+    padding: 7px 10px;
+    border-radius: 7px;
+    color: var(--ink-muted);
+    text-decoration: none;
+    font-size: 13.5px;
+  }
+  .toc a:hover { background: var(--surface-2); color: var(--ink); }
+  .toc .meta {
+    margin-top: 28px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  /* ===== Main content ===== */
+  main { padding: 44px 40px 80px; min-width: 0; }
+  .doc-head { margin-bottom: 44px; }
+  .doc-kicker {
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    font-weight: 700;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+  .doc-head h1 { font-size: 30px; margin: 0 0 10px; font-weight: 700; }
+  .doc-sub { color: var(--ink-muted); font-size: 15px; max-width: 62ch; }
+
+  section.card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 30px 34px;
+    margin-bottom: 22px;
+    box-shadow: var(--shadow);
+    scroll-margin-top: 24px;
+  }
+  section.card > h2 {
+    font-size: 21px;
+    margin: 0 0 6px;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  section.card > h2 .num {
+    font-size: 13px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  .card-intro { color: var(--ink-muted); font-size: 14px; margin: 0 0 20px; max-width: 68ch; }
+
+  h3.sub {
+    font-size: 15px;
+    margin: 26px 0 10px;
+    color: var(--ink);
+    border-left: 3px solid var(--accent);
+    padding-left: 10px;
+  }
+  h3.sub:first-of-type { margin-top: 4px; }
+
+  p { max-width: 70ch; }
+  ul.plain, ol.plain { padding-left: 1.3em; max-width: 68ch; }
+  ul.plain li, ol.plain li { margin-bottom: 7px; }
+  strong { color: var(--ink); }
+
+  .screen-block {
+    border-top: 1px solid var(--border);
+    padding: 24px 0;
+  }
+  .screen-block:first-child { border-top: none; padding-top: 4px; }
+  .screen-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: "Zen Maru Gothic", sans-serif;
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .screen-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px; height: 26px;
+    border-radius: 8px;
+    background: var(--accent-wash);
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  dl.kv { display: grid; grid-template-columns: 88px 1fr; gap: 6px 14px; margin: 0 0 14px; max-width: 70ch; }
+  dl.kv dt { color: var(--ink-faint); font-size: 12.5px; padding-top: 2px; }
+  dl.kv dd { margin: 0; font-size: 14.5px; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 3px 9px;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  .badge.decided { background: var(--decided-wash); color: var(--decided); }
+  .badge.pending { background: var(--pending-wash); color: var(--pending); }
+  .badge .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+
+  table.api {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 6px 0 4px;
+    font-size: 13.5px;
+  }
+  table.api th, table.api td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  table.api th { color: var(--ink-faint); font-weight: 600; font-size: 11.5px; letter-spacing: 0.04em; }
+  table.api td.name { font-family: "JetBrains Mono", monospace; font-size: 12.5px; color: var(--ink); white-space: nowrap; }
+  .table-wrap { overflow-x: auto; }
+
+  .decision-group { margin-bottom: 22px; }
+  .decision-group:last-child { margin-bottom: 0; }
+  .decision-group .head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .decision-group h4 { margin: 0; font-size: 14.5px; font-family: "Noto Sans JP"; font-weight: 700; }
+  .decision-group p { margin: 0; font-size: 14px; color: var(--ink-muted); }
+  .decision-group p strong { color: var(--ink); }
+
+  .mock-link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 10px 0;
+    font-size: 13.5px;
+  }
+  .mock-link .lbl { color: var(--ink-faint); font-size: 11.5px; }
+  .mock-link a { font-family: "JetBrains Mono", monospace; font-size: 12.5px; word-break: break-all; }
+
+  footer.doc-foot {
+    margin-top: 40px;
+    padding-top: 18px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-faint);
+    font-size: 12px;
+  }
+
+  @media (max-width: 880px) {
+    .shell { grid-template-columns: 1fr; }
+    .toc {
+      position: static;
+      height: auto;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+      padding: 24px 20px;
+    }
+    main { padding: 32px 20px 60px; }
+  }
+</style>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Maru+Gothic:wght@500;700&family=Noto+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap">
+
+<div class="shell">
+  <aside class="toc">
+    <div class="brand">
+      <div class="brand-mark"></div>
+      <div class="brand-name">MUSUBOなびゲート</div>
+    </div>
+    <div class="brand-tag">routesupport / 仕様書</div>
+
+    <div class="toc-label">目次</div>
+    <nav>
+      <a href="#sec1">1. 目的</a>
+      <a href="#sec2">2. ブランディング／UI構成方針</a>
+      <a href="#sec3">3. 対象機能（6画面＋AIアシスタント）</a>
+      <a href="#sec4">4. モックの位置づけ</a>
+      <a href="#sec5">5. 滞在アラートの強制通知仕様</a>
+      <a href="#sec6">6. システム構成・API方針の決定事項</a>
+      <a href="#sec7">7. 今後の検討事項（未確定）</a>
+    </nav>
+
+    <div class="meta">
+      対象：営業支援ルート最適化アプリ<br>
+      前提：Google Workspace Frontline<br>
+      ステータス：モック開発フェーズ
+    </div>
+  </aside>
+
+  <main>
+    <div class="doc-head">
+      <div class="doc-kicker">仕様書</div>
+      <h1>MUSUBOなびゲート routesupport</h1>
+      <p class="doc-sub">営業支援ルート最適化アプリ。Google Workspace Frontline 導入を前提に、社員のGoogleカレンダーを起点として、営業訪問・既存利用者モニタリングの計画から実行までを支援する。</p>
+    </div>
+
+    <section class="card" id="sec1">
+      <h2><span class="num">1</span>目的</h2>
+      <p>Google Workspace Frontline 導入を前提に、社員のGoogleカレンダーを起点として、営業訪問・既存利用者モニタリングの計画から実行までを支援する。</p>
+    </section>
+
+    <section class="card" id="sec2">
+      <h2><span class="num">2</span>ブランディング／UI構成方針</h2>
+      <ul class="plain">
+        <li><strong>アプリ名</strong>：「MUSUBOなびゲート」（英語表記：routesupport）。サイドメニュー上部のブランド表示、ブラウザタブタイトルに使用。</li>
+        <li><strong>イメージカラー</strong>：ブランドカラーは「むすぼなグリーン」。本モックでは仮で <code>#4CAF50</code>（主要アクション・マスコット用）と <code>#2E7D32</code>（サイドメニュー・見出し等の背景・テキスト用の濃いグリーン）を採用。正式なブランドカラーコードが確定したら差し替える。</li>
+        <li><strong>マスコット（MuK）</strong>：ブランドのマスコット（緑色のキャラクター、画像ファイル <code>MuK.jpg</code>）を要所に配置。本モックでは「サイドメニュー上部のブランド表示」「ホームのFABメインボタン（マスコット画像化）」「滞在アラートの強制ポップアップ通知」に採用。</li>
+        <li><strong>UIトーン</strong>：カードや帯を太い色ボーダーで装飾する手法（いわゆる「AIツールっぽい」見た目）を避け、Googleカレンダーに近い「白背景＋薄いグレー罫線＋軽い影」のトーンで統一。色は状態表示（優先度・当日・ラベル分類など）にのみ使用し、装飾目的では使わない方針とする。全画面に同トーンを展開済み。</li>
+      </ul>
+
+      <h3 class="sub">サイドメニュー（ドロワー式）</h3>
+      <ul class="plain">
+        <li>画面左上のハンバーガーボタン（☰）でスライドイン表示し、画面外タップで閉じるドロワー形式。常時表示ではなく必要時のみ呼び出し、コンテンツ表示領域を最大化する。</li>
+        <li>メニュー項目と順序（固定）：🏠 ホーム／✅ タスク／🗺️ ルート提案／🅿️ 駐車場リスト／🤖 AI提案／⏰ 滞在アラート</li>
+        <li>AIアシスタントはサイドメニューには含めず、FABのサブボタンから呼び出す。</li>
+        <li>Google連携ステータス表示：ブランド表示の下に「Google連携済み」バッジ（緑ドット＋テキスト）を配置。本モックでは表示のみのダミーで、実際の認証・API接続は行わない。実データ連携フェーズでは、実際のGoogle OAuthログインボタンや個別API（Calendar／Tasks）ごとの接続状態表示に置き換える想定。</li>
+      </ul>
+
+      <h3 class="sub">トップバー</h3>
+      <ul class="plain">
+        <li>画面上部の緑帯（ブランドカラー）。左端にハンバーガーボタン（☰）、中央に現在画面のタイトルを表示。</li>
+        <li>ホームに戻るボタン：右端に配置。アイコンはカーブ矢印（↩️）。ホーム画面表示中は非表示、それ以外の画面ではタップでホームに戻る。</li>
+      </ul>
+
+      <h3 class="sub">FAB（フローティングアクションボタン／MuKボタン）</h3>
+      <ul class="plain">
+        <li>ホーム画面のみに表示する、直径80pxのマスコット画像ボタン。タップでサブボタンが展開：「🎙️ AIと話す」「🤖 AI提案を追加」「✅ タスクを追加」「予定を追加」の4択。</li>
+        <li>ドラッグ移動対応：ユーザーが親指の届く位置に自由に移動できる（タッチ／マウス両対応）。ドラッグと短タップを判別し、移動距離が小さい場合はタップとしてサブボタンを展開する。</li>
+      </ul>
+
+      <h3 class="sub">モバイル対応方針</h3>
+      <ul class="plain">
+        <li><code>viewport</code> メタタグ（<code>width=device-width, initial-scale=1</code>）を設定し、スマホ実寸で表示する。</li>
+        <li>タッチ領域は Apple Human Interface Guidelines の <strong>44px 基準</strong>を遵守。</li>
+        <li>フォントは最小13px、主要テキストは15px以上で可読性を確保。</li>
+      </ul>
+    </section>
+
+    <section class="card" id="sec3">
+      <h2><span class="num">3</span>対象機能（6画面＋AIアシスタント）</h2>
+      <p class="card-intro">各画面の目的・入出力データ・画面要素を定義する。</p>
+
+      <div class="screen-block">
+        <div class="screen-title"><span class="screen-num">①</span>ホーム（スケジューラー：日／週／月）</div>
+        <dl class="kv">
+          <dt>目的</dt><dd>Googleカレンダーの予定をベースに、当日・週・月単位でスケジュールとタスクを一覧・登録・削除できる起点画面。同僚（同一ワークスペース内の他メンバー）の予定も重ねて確認できる。</dd>
+          <dt>入力データ</dt><dd>Googleカレンダーの予定・空き時間（Calendar API）、アプリ内タスク（期限・完了状態）、閲覧対象メンバーのカレンダー（同一Google Workspaceドメイン内）。</dd>
+          <dt>出力</dt><dd>日／週／月ごとの予定＋タスク表示。FAB経由の予定追加・タスク追加・削除（確認ダイアログ付き）。</dd>
+        </dl>
+        <h3 class="sub">画面要素</h3>
+        <ul class="plain">
+          <li>日・週・月の切替タブ</li>
+          <li><strong>メンバー選択チップ</strong>：タブ下に横並びで表示。自分の予定は常に表示されるためチップ化はせず、同僚のみチップ表示。タップで表示ON/OFFを切り替え可能。選択中のメンバーが日／週／月表示すべてに反映される。</li>
+          <li><strong>メンバーの追加（「＋追加」ボタン）</strong>：チップ列の末尾に配置。タップするとGoogleアカウント（メールアドレス）をキーにした候補一覧（ダミーの固定リスト）がポップアップで開き、チェックボックスで選択→「選択を確定」で表示メンバーに追加される。</li>
+          <li><strong>メンバーの削除（チップの「×」）</strong>：各同僚チップの右側に「×」を配置。タップ（削除確認あり）するとそのメンバーを表示から完全に削除し、「＋追加」の候補一覧に戻る。</li>
+          <li><strong>日表示</strong>：選択中メンバーごとにセクションを分け、それぞれの時刻＋件名のタイムラインを縦に並べて表示（複数人分を縦スクロールで確認）。</li>
+          <li><strong>週表示</strong>：日表示と同様にメンバーごとにセクションを分け、各セクション内に曜日ごとの予定を一覧表示。当日は緑色ヘッダーでハイライト。</li>
+          <li><strong>月表示</strong>：日付セル＋メンバーごとに色分けしたドット表示（自分＝グリーン、同僚＝赤・黒など）で、誰の予定がある日かを一目で確認できる。</li>
+          <li>今日のタスクリスト（チェックボックス・削除ボタン）／右下FAB（MuKボタン）</li>
+        </ul>
+        <h3 class="sub">予定の色分け・編集権限</h3>
+        <p>予定名の左のドット色でメンバーを識別（メンバー選択チップと同じ色）。自分の予定はタップで内容を編集可能、同僚の予定はタップすると「閲覧のみ」の詳細ポップアップが開き、編集・削除はできない。</p>
+        <h3 class="sub">日付表示・ナビゲーション</h3>
+        <ul class="plain">
+          <li>画面上部に日付バッジを常時表示（日：<code>yyyy/mm/dd（曜日）</code>、週：<code>yyyy/mm/dd～yyyy/mm/dd</code>、月：<code>yyyy/mm</code>）。</li>
+          <li>週・月表示では日付バッジ両側に「‹ ›」ボタンを表示し、前後の週／月へ移動できる。</li>
+          <li><strong>日付バッジのタップでカレンダー表示</strong>：日／週／月いずれの表示中でも、上部の日付バッジをタップするとカレンダー（タスク期限選択と同じポップオーバー部品）が開き、任意の日付を選択できる。選択すると日表示に切り替わり、その日のスケジュールを確認できる（過去・未来どちらも選択可）。</li>
+        </ul>
+        <ul class="plain">
+          <li><strong>空き時間からAI提案への遷移</strong>：タイムライン上の空き時間カードに「🤖 AI提案を見る」ボタンを設置し、AI提案画面へ直接遷移できる（自分の空き時間のみ表示・対象）。</li>
+          <li><strong>月表示から日表示への遷移</strong>：月表示の日付セルをタップすると、その日付で日表示に切り替わる。</li>
+          <li><strong>日表示の制約（ダミーデータ）</strong>：本モックではメンバーごと・日ごとの実データを保持していないため、日表示の予定内容は「曜日」に基づくダミーデータを流用して表示する（例：火曜日を選択すると、週表示の火曜日と同じ内容が表示される）。実際の日付固有の予定ではない点に注意（実データ連携時の対応は「7. 今後の検討事項」参照）。</li>
+          <li><strong>予定タップで詳細編集</strong>：日表示・週表示の予定（空き時間を除く）をタップすると編集ポップアップが開き、タイトル・時間（開始／終了）・場所・予定内容（いずれもダミーデータ）を確認・編集できる。「保存する」でタイムライン表示に即時反映、「キャンセル」で破棄。表示上の反映のみで、Googleカレンダーへの実書き込みは行わない。</li>
+          <li><strong>予定追加モーダルの入力項目</strong>：タイトル／日付／時間帯（ロールピッカー）／場所に加えて、「予定内容」の複数行テキストボックスを設置。</li>
+          <li><strong>予定・タスクの「メンバーに共有」機能</strong>：予定の登録モーダル・予定編集ポップアップ（自分の予定のみ）・タスクの登録モーダル・タスク編集ポップアップに「共有」欄を設置。「＋メンバーに共有」ボタンからメンバー追加と同じ候補ピッカー（自分を除く）を開き、複数選択して共有先チップとして表示できる。共有操作はUI上の記録のみで、共有先ユーザーの画面に実際に反映される連携は行わない（実データ連携時はGoogleカレンダーの「ゲストを追加」やタスクの共有権限設定に相当する処理が必要）。</li>
+          <li><strong>タスクタップで詳細編集</strong>：ホーム・タスク画面いずれのタスク（チェックボックス・削除ボタンを除く）をタップすると編集ポップアップが開き、内容・期限（開始日／終了日）を編集できる。ラベルはタスク画面のようにラベルが設定されている場合のみ編集欄を表示。</li>
+        </ul>
+      </div>
+
+      <div class="screen-block">
+        <div class="screen-title"><span class="screen-num">②</span>AI提案</div>
+        <dl class="kv">
+          <dt>目的</dt><dd>指定した日の空き時間に対し、訪問すべき先（新規営業／既存利用者モニタリング）をAIが提案する。当日に限らず任意の日を指定可能。</dd>
+          <dt>入力データ</dt><dd>指定日のGoogleカレンダーの空き時間、基幹貸与システムの顧客データ（利用状況・前回訪問日・優先度）。</dd>
+          <dt>出力</dt><dd>指定日における複数の空き時間帯ごとに、複数件の訪問先提案（訪問理由・優先度・所要時間）。採用するとホームの予定として登録。</dd>
+        </dl>
+        <ul class="plain">
+          <li><strong>日付指定</strong>：前日／翌日送りボタン＋ミニカレンダー（タップで展開）</li>
+          <li><strong>時間帯ごとの提案カード群</strong>：顧客名・理由・優先度・所要時間・採用／却下ボタン</li>
+          <li>タグ表示：優先度（高/中/低）、対象種別（個人/新規営業/モニタリング）。対象顧客は法人・個人の両方を含み、個人は「個人」タグ付きで氏名表示。</li>
+        </ul>
+        <h3 class="sub">将来構想：自社BIツール連携による高精度AI提案</h3>
+        <p>自社BIツールと連携し、販売・利用実績データをAIが解析した上で訪問先・優先度を提案。課題分析（利用実績の変動推移）とフロントトーク案（切り出し方・提案トーク）まで提案内容に含める。本モックではサンプルカード（Coming soon表示）のみ掲載。実データ連携はフェーズ3以降。</p>
+      </div>
+
+      <div class="screen-block">
+        <div class="screen-title"><span class="screen-num">③</span>タスク（一覧＋ガントチャート）</div>
+        <dl class="kv">
+          <dt>目的</dt><dd>Googleカレンダーにはない「やることリスト」を種別ごとに分類・管理する。</dd>
+          <dt>登録項目</dt><dd>タスク名、開始日、終了日（期間指定）、ラベル、共有メンバー（任意・「＋メンバーに共有」で選択）。</dd>
+        </dl>
+        <h3 class="sub">ラベル分類</h3>
+        <ul class="plain">
+          <li>🔵 <strong>利用者</strong>：個人利用者への連絡・報告・モニタリングフォロー</li>
+          <li>🟢 <strong>紹介先</strong>：法人・紹介先企業への営業フォロー・見積り・契約手続き</li>
+          <li>🟠 <strong>市区町村</strong>：行政機関（市区町村・ケアマネ等）への書類送付・会議対応</li>
+          <li>⚪ <strong>事務処理</strong>：実績入力・書類作成・社内処理等の内部業務</li>
+        </ul>
+        <ul class="plain">
+          <li>ラベルフィルターバー：タスク画面上部に「すべて／利用者／紹介先／市区町村／事務処理」のフィルターボタンを常時表示。タップで即時絞り込み。</li>
+          <li>ガントチャート：タスク画面右上の「📊 ガントチャート」ボタンで遷移。2週間スパンの横棒チャートで各タスクの期間を可視化。本日ラインを緑色で強調表示。完了タスクはグレーバーで識別。</li>
+        </ul>
+      </div>
+
+      <div class="screen-block">
+        <div class="screen-title"><span class="screen-num">④</span>ルート提案（駐車場提案をデフォルト統合）</div>
+        <dl class="kv">
+          <dt>目的</dt><dd>複数訪問先が決まった際、移動効率の良い巡回順をAIが提案する。各訪問先に最寄りのコインパーキングをデフォルトで併記し、駐車場探しの手間を削減。</dd>
+          <dt>入力データ</dt><dd>訪問先リスト（緯度経度）、出発地、各訪問の希望時間帯、訪問先周辺の駐車場満空情報。</dd>
+          <dt>出力</dt><dd>最適化された訪問順序、地図上のルート表示、移動時間・距離の合計、各訪問先の推奨駐車場（空車数・距離）。</dd>
+        </dl>
+        <ul class="plain">
+          <li>ルートは「提案」であることの明示：「このルートを採用する」または「別ルートを再提案」を選択できる。</li>
+          <li>各訪問先カードに「駐車場までナビ開始」ボタンを配置。駐車場座標を目的地として外部ナビへ連携する（駐車場不要な場合は「ナビ開始」ボタン）。</li>
+          <li>満車時の挙動：最寄り駐車場が満車の場合、「満車のため他の駐車場を選ぶ」リンクを表示し、⑤駐車場リスト画面の該当訪問先へ遷移。</li>
+          <li>モックでの地図表現：Googleマップ埋め込み＋キャプション。実ルート線描画はGoogle Maps Routes APIによる本実装時に対応。</li>
+        </ul>
+      </div>
+
+      <div class="screen-block">
+        <div class="screen-title"><span class="screen-num">⑤</span>駐車場リスト（単独ビュー・訪問先別）</div>
+        <dl class="kv"><dt>目的</dt><dd>ルート提案とは別に、特定の訪問先周辺の駐車場を単独で確認・比較する。</dd></dl>
+        <ul class="plain">
+          <li>訪問先セレクター：「🏢 訪問先を選択」のドロップダウンで切り替え。見出しに「（訪問先）への訪問用 近隣パーキング」と常時明示。</li>
+          <li>駐車場一覧（空車／満車・距離・料金目安）、ルートへの追加ボタン。④から満車リンクで遷移した場合は該当訪問先が自動選択された状態で表示。</li>
+        </ul>
+      </div>
+
+      <div class="screen-block">
+        <div class="screen-title"><span class="screen-num">⑥</span>滞在アラート</div>
+        <dl class="kv">
+          <dt>目的</dt><dd>訪問先での滞在が長引いた場合に通知し、スケジュール遅延を防ぐ。「連絡が入ってきた」という自然な退席の空気をつくる着信風UIを採用。</dd>
+          <dt>カウント開始</dt><dd>GPSが訪問先のジオフェンスへの進入を検知した瞬間から滞在時間をカウント開始（予定時刻ベースではなく実到着ベース）。</dd>
+        </dl>
+        <p>出力（通常画面）：残り時間カウントダウン（残り10分で黄色警告、超過で赤警告）、通知ログ。出力（実際の通知発報時）：「5. 滞在アラートの強制通知仕様」に従う。</p>
+      </div>
+
+      <div class="screen-block">
+        <div class="screen-title"><span class="screen-num">⑦</span>AIアシスタント（音声入力＋チャットボット）</div>
+        <dl class="kv">
+          <dt>目的</dt><dd>運転中・フリック入力が困難な状況でも、マイクへの話しかけだけで主要操作を完結できるようにする。</dd>
+          <dt>呼び出し方</dt><dd>FABのサブボタン「🎙️ AIと話す」からチャット画面を呼び出す。テキスト・音声の両入力に対応。</dd>
+        </dl>
+        <ul class="plain">
+          <li><strong>音声入力</strong>：Web Speech API でマイク音声をテキスト変換し送信（Chrome/Edge対応、Safariは一部制限あり）。録音中はマイクボタンが赤く点滅。</li>
+          <li><strong>テキスト入力</strong>：チャット形式でメッセージを入力・送信（Enterキーまたは送信ボタン）。</li>
+        </ul>
+        <h3 class="sub">主な対話シナリオ（5種）</h3>
+        <ol class="plain">
+          <li><strong>スケジュール登録</strong>：「明日14時にA商事の訪問を追加して」→ カレンダー登録の確認返答</li>
+          <li><strong>AI提案の採用</strong>：「13時の提案を採用して」→ AI提案画面へ自動遷移</li>
+          <li><strong>ルート再設定</strong>：「山田さんのところに行きたい」→ ルート提案画面へ自動遷移</li>
+          <li><strong>タスク追加</strong>：「B工業の見積書送付をタスクに追加して」→ タスク追加の確認返答</li>
+          <li><strong>スケジュール確認</strong>：「今日のスケジュールを教えて」→ 本日の予定一覧を返答</li>
+        </ol>
+        <p>モックでの実装：ルールベースの会話パターンで5シナリオをデモ動作。想定外入力には「もう少し詳しく教えてください」と返すフォールバックあり。</p>
+        <h3 class="sub">本実装での技術方針</h3>
+        <ul class="plain">
+          <li>LLMと接続し、自然言語の意図解析（インテント判定）を行う（採用方針は「6. システム構成」参照）。</li>
+          <li>Calendar API・ルート提案ロジック・タスクDBをFunction Callingで呼び出す。</li>
+          <li>音声はブラウザ内でテキスト変換後にLLMへ送信（音声データ自体は外部送信しない）。</li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="card" id="sec4">
+      <h2><span class="num">4</span>モックの位置づけ</h2>
+      <ul class="plain">
+        <li>見た目・画面遷移・操作感の確認が目的。実機スマホ（Chrome推奨）でそのままデモ可能。</li>
+        <li>データはすべてダミー（ハードコード）。バックエンド・API実連携はフェーズ2以降。</li>
+      </ul>
+      <div class="mock-link">
+        <div>
+          <div class="lbl">共有URL（GitHub Pages）</div>
+          <a href="https://yst-nakamuramakoto.github.io/route_JKKSL_mock/mock.html" target="_blank" rel="noopener">yst-nakamuramakoto.github.io/route_JKKSL_mock/mock.html</a>
+        </div>
+      </div>
+      <div class="mock-link">
+        <div>
+          <div class="lbl">リポジトリ（Public）</div>
+          <a href="https://github.com/yst-nakamuramakoto/route_JKKSL_mock" target="_blank" rel="noopener">github.com/yst-nakamuramakoto/route_JKKSL_mock</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="card" id="sec5">
+      <h2><span class="num">5</span>滞在アラートの強制通知仕様</h2>
+      <p class="card-intro">通常のメニュー画面（⑥滞在アラート）はカウントダウン確認用UIだが、実際のアラート発報時は他の画面を表示中でも以下3点を同時に実行する。</p>
+      <ol class="plain">
+        <li><strong>着信風ポップアップ</strong>：全画面に「📞 着信中」スタイルの強制ポップアップを最前面表示。グリーン系グラデーション背景＋電話ベルアイコンが揺れるアニメーション。「応答ボタン（退出）」「確認ボタン（続行）」の2択で自然な退席演出を実現。確認するまで他操作をブロック。</li>
+        <li><strong>着信音</strong>：電話の着信リズム（880Hz/660Hzの交互パターン）をWeb Audio APIで再生。</li>
+        <li><strong>端末バイブレーション</strong>：<code>navigator.vibrate([500,200,500,200,500,200,500])</code> で着信パターンのバイブレーションを作動（本実装ではプッシュ通知＋端末標準の通知音・バイブレーションAPIを利用）。</li>
+      </ol>
+    </section>
+
+    <section class="card" id="sec6">
+      <h2><span class="num">6</span>システム構成・API方針の決定事項 <span class="badge decided" style="margin-left:6px;"><span class="dot"></span>決定</span></h2>
+      <p class="card-intro">本実装に向けて確定した方針。詳細な契約条件・費用等は別途確認が必要だが、採用する仕組み自体は下記で決定とする。</p>
+
+      <div class="decision-group">
+        <div class="head"><h4>インフラ基盤</h4></div>
+        <p><strong>Cloudflareで一本化</strong>：Workers（API・秘匿キー管理層）＋D1（タスク共有関係・訪問履歴・通知ログ等アプリ固有データの保存）＋KV（ディレクトリ情報等のキャッシュ）＋Queues（プッシュ通知の非同期配信）で構成する。Amazon Bedrock・Google各API・社内システムAPIの呼び出しはすべてWorkersからサーバーサイドで行い、APIキーをクライアントに露出させない。将来リレーショナルなデータ構造がより複雑になった場合は、Postgres（Supabase等）への部分移行も可能な構成としておく。</p>
+      </div>
+      <div class="decision-group">
+        <div class="head"><h4>駐車場データ取得方針</h4></div>
+        <p>タイムズ・三井のリパークへの個別提携交渉は行わず、<strong>集約系API（ナビタイムジャパンの駐車場検索API、ZENRIN Maps API／いつもNAVI API）を優先して採用</strong>する。契約条件・費用は別途確認。</p>
+      </div>
+      <div class="decision-group">
+        <div class="head"><h4>滞在アラートのプッシュ通知</h4></div>
+        <p><strong>Firebase Cloud Messaging（FCM）を採用</strong>。Web Push（PWA）・ネイティブアプリ（将来iOS/Android化する場合）の両方に対応でき、「モバイルアプリ or PWA」の実装形態がどちらに転んでも通知基盤を作り直さずに済むため。</p>
+      </div>
+      <div class="decision-group">
+        <div class="head"><h4>AI接続方針</h4></div>
+        <p><strong>Amazon Bedrock（自社むすぼなAI）を優先採用</strong>。API発行が難しい場合は<strong>Anthropic Claude API</strong>をフォールバックとする。</p>
+      </div>
+
+      <h3 class="sub">必要API一覧（上記方針に基づく整理）</h3>
+      <div class="table-wrap">
+        <table class="api">
+          <thead><tr><th>API</th><th>用途</th></tr></thead>
+          <tbody>
+            <tr><td class="name">Google Calendar API</td><td>予定の取得・登録・更新・削除</td></tr>
+            <tr><td class="name">Google Tasks API</td><td>タスクの取得・登録・更新・削除</td></tr>
+            <tr><td class="name">Google Admin SDK Directory API</td><td>メンバー一覧取得（メンバー選択チップの実データ化）</td></tr>
+            <tr><td class="name">Google Maps Platform</td><td>Maps JavaScript API／Routes・Directions API／Geocoding API</td></tr>
+            <tr><td class="name">Amazon Bedrock Runtime API</td><td>むすぼなAI（優先）</td></tr>
+            <tr><td class="name">Anthropic Claude API</td><td>AIアシスタントのフォールバック</td></tr>
+            <tr><td class="name">福祉用具貸与システムDB API</td><td>顧客・利用状況・前回訪問日データ</td></tr>
+            <tr><td class="name">SFA「ゴリラシステム」API</td><td>見込み客・訪問先の名称・住所・電話番号</td></tr>
+            <tr><td class="name">ナビタイム 駐車場検索API</td><td>駐車場の位置・満空情報</td></tr>
+            <tr><td class="name">ZENRIN Maps API／いつもNAVI API</td><td>駐車場・地図情報</td></tr>
+            <tr><td class="name">Firebase Cloud Messaging API</td><td>プッシュ通知配信</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" id="sec7">
+      <h2><span class="num">7</span>今後の検討事項（未確定） <span class="badge pending" style="margin-left:6px;"><span class="dot"></span>検討中</span></h2>
+
+      <h3 class="sub">システム連携</h3>
+      <ul class="plain">
+        <li>基幹貸与システムとのデータ連携方式（API有無の確認待ち）</li>
+        <li>Google Maps Routes APIによる実ルート線描画・ナビゲーション連携先（駐車場経由地点の自動セット）の実装方法</li>
+        <li>ジオフェンス進入検知の実装方式（端末GPSの取得頻度・電池消費とのバランス）</li>
+        <li><strong>他メンバーのスケジュール閲覧方式</strong>：全社員がGoogle Workspaceのドメインアカウントであることを前提に、個々のOAuthログインを求めず閲覧できるようにする。実装は管理者がGoogle Workspace管理コンソールで「ドメイン全体の委任（Domain-wide Delegation）」を設定し、サービスアカウント経由でドメイン内メンバーのカレンダーを取得する方式を想定（各人の個別ログイン・都度の権限許可は不要）。閲覧範囲（全社員／同一チームのみ等）や、カレンダーの共有設定（詳細表示可否）は別途調整が必要。</li>
+      </ul>
+
+      <h3 class="sub">AIアシスタント</h3>
+      <ul class="plain">
+        <li>むすぼなAI（Bedrock）・Claude APIの利用費用試算</li>
+        <li>音声入力のSafari対応方針（Web Speech API非対応環境での代替：サーバーサイド音声認識APIの利用可否）</li>
+        <li>ボット対話ログの保存・管理方針（履歴の保持期間、個人情報・顧客名の取り扱い）</li>
+        <li>運転中利用を想定したハンズフリー操作の安全設計（ウェイクワード起動、自動読み上げ応答の要否）</li>
+      </ul>
+
+      <h3 class="sub">画面・データ表示</h3>
+      <ul class="plain">
+        <li>月ビューの実データ表示仕様（現状モックはドット件数のみの簡易ダミー表示）</li>
+        <li>週ビューで本日以外の予定をGoogleカレンダーから実データ取得する実装</li>
+        <li>ガントチャートへの実タスクデータ連携（追加・編集・削除のリアルタイム反映）</li>
+        <li>タスクラベルのカスタマイズ機能（ラベル名・色の追加・編集・削除）</li>
+        <li>自社BIツールとの連携方式・対象データ範囲（AI提案の高精度化）</li>
+      </ul>
+
+      <h3 class="sub">ブランディング・インフラ</h3>
+      <ul class="plain">
+        <li>モバイルアプリ or PWA どちらで本実装するか</li>
+        <li>「むすぼなグリーン」の正式なブランドカラーコード、マスコットの正式デザインデータ（ロゴガイドライン）の確定</li>
+      </ul>
+    </section>
+
+    <footer class="doc-foot">MUSUBOなびゲート routesupport — 仕様書</footer>
+  </main>
+</div>
